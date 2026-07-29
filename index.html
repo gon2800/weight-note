@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>체중 노트</title>
+<title>체중 노트 - My Weight Log</title>
 <style>
   :root{
     --bg:#F5F6FB; --card:#FFFFFF; --ink:#1F2437; --sub:#7A809A;
@@ -18,71 +18,70 @@
     --drink:#EF6C6C;
     --food-hi:#E8894A; --food-mid:#F0B429; --food-lo:#3FB950;
     --shadow:0 1px 2px rgba(31,36,55,.04),0 8px 24px rgba(31,36,55,.06);
-    --radius:20px;
+    --radius:18px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;padding:0}
+  html,body{margin:0;padding:0;height:100%}
   body{
     font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
     background:var(--bg); color:var(--ink);
     padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:520px; margin:0 auto; padding:16px 16px 40px}
+  .wrap{max-width:520px; margin:0 auto; padding:10px 12px 14px}
   .tabnum{font-variant-numeric:tabular-nums; font-feature-settings:"tnum"}
 
-  .top{display:flex; align-items:center; justify-content:space-between; padding:8px 4px 14px}
-  .brand{display:flex; align-items:center; gap:10px}
-  .brand .logo{width:34px;height:34px;border-radius:11px;background:var(--accent);
-    display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
-  .brand h1{font-size:19px; margin:0; letter-spacing:-.4px}
-  .brand small{display:block;color:var(--sub);font-size:11px;font-weight:600;letter-spacing:.2px}
-  .iconbtn{border:none;background:var(--card);width:40px;height:40px;border-radius:12px;
-    box-shadow:var(--shadow); color:var(--ink); font-size:17px; cursor:pointer}
+  .top{display:flex; align-items:center; justify-content:space-between; padding:4px 2px 8px}
+  .brand{display:flex; align-items:center; gap:8px; min-width:0}
+  .brand .logo{width:30px;height:30px;border-radius:9px;object-fit:cover;display:block;flex:0 0 auto}
+  .brand h1{font-size:15px; margin:0; letter-spacing:-.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .iconbtn{border:none;background:var(--card);width:34px;height:34px;border-radius:11px;
+    box-shadow:var(--shadow); color:var(--ink); font-size:16px; cursor:pointer; flex:0 0 auto}
 
-  .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; margin-bottom:16px}
+  .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; margin-bottom:10px}
 
-  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  .cal-title{font-size:17px;font-weight:800;letter-spacing:-.3px}
-  .cal-nav{display:flex;gap:8px;align-items:center}
-  .navbtn{border:none;background:var(--bg);width:36px;height:36px;border-radius:10px;
-    color:var(--ink);font-size:16px;cursor:pointer}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .cal-title{font-size:15px;font-weight:800;letter-spacing:-.3px}
+  .cal-nav{display:flex;gap:6px;align-items:center}
+  .navbtn{border:none;background:var(--bg);width:30px;height:30px;border-radius:9px;
+    color:var(--ink);font-size:14px;cursor:pointer}
   .today-btn{border:none;background:var(--accent-soft);color:var(--accent);font-weight:700;
-    font-size:12px;padding:0 12px;height:36px;border-radius:10px;cursor:pointer}
+    font-size:11px;padding:0 10px;height:30px;border-radius:9px;cursor:pointer}
   .dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;
-    font-size:11px;font-weight:700;color:var(--sub);padding-bottom:6px}
+    font-size:10px;font-weight:700;color:var(--sub);padding-bottom:4px}
   .dow .sun{color:#E9698A}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-  .cell{aspect-ratio:1/1.15;border-radius:12px;display:flex;flex-direction:column;
-    align-items:center;padding-top:6px;cursor:pointer;position:relative;background:transparent;
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .cell{aspect-ratio:1/0.92;border-radius:10px;display:flex;flex-direction:column;
+    align-items:center;padding-top:4px;cursor:pointer;position:relative;background:transparent;
     border:1px solid transparent;transition:background .12s}
   .cell.empty{cursor:default}
   .cell:active{background:var(--bg)}
-  .cell .d{font-size:13px;font-weight:600;color:var(--ink);line-height:1}
+  .cell .d{font-size:12px;font-weight:600;color:var(--ink);line-height:1}
   .cell.sun .d{color:#E9698A}
   .cell.today{background:var(--accent);}
   .cell.today .d{color:#fff}
-  .cell .w{font-size:11px;font-weight:800;color:var(--accent);margin-top:4px}
+  .cell .w{font-size:10px;font-weight:800;color:var(--accent);margin-top:3px}
   .cell.today .w{color:#fff}
-  .cell .dot{width:6px;height:6px;border-radius:50%;position:absolute;bottom:6px}
+  .cell .dot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:5px}
   .cell.today .dot{outline:1.5px solid rgba(255,255,255,.6)}
 
-  .seg{display:flex;background:var(--bg);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
-  .seg button{flex:1;border:none;background:transparent;padding:8px 0;border-radius:9px;
-    font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}
+  .seg{display:flex;background:var(--bg);border-radius:11px;padding:3px;gap:3px;margin-bottom:8px}
+  .seg button{flex:1;border:none;background:transparent;padding:6px 0;border-radius:8px;
+    font-size:12px;font-weight:700;color:var(--sub);cursor:pointer}
   .seg button.on{background:var(--card);color:var(--accent);box-shadow:var(--shadow)}
-  .chart-stats{display:flex;gap:8px;margin-bottom:10px}
-  .stat{flex:1;background:var(--bg);border-radius:12px;padding:9px 12px}
-  .stat .lab{font-size:10px;color:var(--sub);font-weight:700}
-  .stat .val{font-size:16px;font-weight:800;margin-top:2px}
-  .stat .val small{font-size:11px;color:var(--sub);font-weight:700}
+  .chart-stats{display:flex;gap:6px;margin-bottom:6px}
+  .stat{flex:1;background:var(--bg);border-radius:10px;padding:6px 10px;
+    display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .stat .lab{font-size:10px;color:var(--sub);font-weight:700;white-space:nowrap}
+  .stat .val{font-size:14px;font-weight:800}
+  .stat .val small{font-size:10px;color:var(--sub);font-weight:700}
   .chart-box{width:100%}
-  .empty-msg{text-align:center;color:var(--sub);font-size:13px;padding:40px 0;font-weight:600}
-  .legend{display:flex;gap:14px;justify-content:center;align-items:center;margin-top:10px;
-    font-size:11px;color:var(--sub);font-weight:600;flex-wrap:wrap}
+  .empty-msg{text-align:center;color:var(--sub);font-size:12px;padding:24px 0;font-weight:600}
+  .legend{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:4px;
+    font-size:10px;color:var(--sub);font-weight:600;flex-wrap:wrap}
   .legend .cap{color:var(--ink);font-weight:800}
-  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
-  .legend .bar-i{width:7px;height:11px;border-radius:2px}
+  .legend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+  .legend .bar-i{width:6px;height:10px;border-radius:2px}
   .legend .pct{color:var(--drink);font-weight:800}
 
   .backdrop{position:fixed;inset:0;background:rgba(20,22,35,.4);opacity:0;pointer-events:none;
@@ -96,13 +95,14 @@
   .handle{width:40px;height:4px;background:var(--line);border-radius:3px;margin:6px auto 16px}
   .sheet .date-lab{font-size:15px;font-weight:800;letter-spacing:-.3px;margin-bottom:16px;text-align:center}
   .field-lab{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px}
-  .w-input{display:flex;align-items:center;background:var(--bg);border-radius:14px;
-    padding:0 16px;margin-bottom:20px;border:2px solid transparent}
+  .w-input{display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:14px;
+    padding:0 16px;margin-bottom:20px;border:2px solid transparent;gap:2px}
   .w-input:focus-within{border-color:var(--accent)}
-  .w-input input{flex:1;border:none;background:transparent;font-size:26px;font-weight:800;
-    padding:14px 0;outline:none;color:var(--ink);width:100%}
-  .w-input input::placeholder{color:#C4C8D8;font-weight:700}
-  .w-input span{font-size:15px;font-weight:700;color:var(--sub)}
+  .w-input .wdigit{width:38px;flex:0 0 auto;border:none;background:transparent;font-size:26px;font-weight:800;
+    padding:14px 0;outline:none;color:var(--ink);text-align:center}
+  .w-input .wdigit::placeholder{color:#C4C8D8;font-weight:700}
+  .w-input .wdot{font-size:26px;font-weight:800;color:var(--ink);padding:0 1px}
+  .w-input .kg-lab{font-size:15px;font-weight:700;color:var(--sub);margin-left:auto}
   .rate,.drink{display:flex;gap:8px;margin-bottom:20px}
   .rate button{flex:1;border:2px solid var(--line);background:var(--card);padding:14px 0;
     border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;color:var(--ink);
@@ -125,7 +125,7 @@
   .menu.show{pointer-events:auto}
   .menu .mbd{position:absolute;inset:0;background:rgba(20,22,35,.4);opacity:0;transition:opacity .2s}
   .menu.show .mbd{opacity:1}
-  .menu .mpanel{position:absolute;right:16px;top:64px;background:var(--card);border-radius:16px;
+  .menu .mpanel{position:absolute;right:16px;top:56px;background:var(--card);border-radius:16px;
     box-shadow:var(--shadow);padding:6px;min-width:180px;transform:scale(.9);opacity:0;
     transform-origin:top right;transition:.15s}
   .menu.show .mpanel{transform:scale(1);opacity:1}
@@ -139,8 +139,8 @@
 <div class="wrap">
   <div class="top">
     <div class="brand">
-      <div class="logo">체</div>
-      <div><h1>체중 노트</h1><small>MY WEIGHT LOG</small></div>
+      <img class="logo" src="icon-192.png" alt="체중 노트">
+      <h1>체중 노트 - My Weight Log</h1>
     </div>
     <button class="iconbtn" id="menuBtn" aria-label="메뉴">⋯</button>
   </div>
@@ -162,15 +162,15 @@
 
   <div class="card">
     <div class="seg" id="seg">
-      <button data-p="7" class="on">1주</button>
+      <button data-p="7">1주</button>
       <button data-p="31">1개월</button>
       <button data-p="183">6개월</button>
-      <button data-p="365">1년</button>
+      <button data-p="365" class="on">1년</button>
     </div>
     <div class="chart-stats">
-      <div class="stat"><div class="lab">최근</div><div class="val tabnum" id="stLast">–</div></div>
-      <div class="stat"><div class="lab">최저</div><div class="val tabnum" id="stMin">–</div></div>
-      <div class="stat"><div class="lab">최고</div><div class="val tabnum" id="stMax">–</div></div>
+      <div class="stat"><span class="lab">최근</span><span class="val tabnum" id="stLast">–</span></div>
+      <div class="stat"><span class="lab">최저</span><span class="val tabnum" id="stMin">–</span></div>
+      <div class="stat"><span class="lab">최고</span><span class="val tabnum" id="stMax">–</span></div>
     </div>
     <div class="chart-box" id="chartBox"></div>
     <div class="legend" id="legendDrink"></div>
@@ -189,8 +189,11 @@
   <div class="date-lab" id="sheetDate">2026년 7월 28일</div>
   <div class="field-lab">오늘의 체중</div>
   <div class="w-input">
-    <input id="wInput" type="number" inputmode="decimal" step="0.1" placeholder="0.0" aria-label="체중 입력">
-    <span>kg</span>
+    <input id="wD1" class="wdigit" type="tel" inputmode="numeric" maxlength="1" placeholder="0" aria-label="체중 십의 자리">
+    <input id="wD2" class="wdigit" type="tel" inputmode="numeric" maxlength="1" placeholder="0" aria-label="체중 일의 자리">
+    <span class="wdot">.</span>
+    <input id="wD3" class="wdigit" type="tel" inputmode="numeric" maxlength="1" placeholder="0" aria-label="체중 소수 자리">
+    <span class="kg-lab">kg</span>
   </div>
   <div class="field-lab">오늘의 식사량</div>
   <div class="rate" id="rate">
@@ -200,7 +203,7 @@
   </div>
   <div class="field-lab">음주 여부</div>
   <div class="drink" id="drink">
-    <button data-a="0" class="sel">안 마심</button>
+    <button data-a="0">안 마심</button>
     <button data-a="1">마심 🍷</button>
   </div>
   <div class="actions">
@@ -224,7 +227,9 @@ const FOOD_COLOR={"상":"#E8894A","중":"#F0B429","하":"#3FB950"};
 const DRINK_COLOR="#EF6C6C";
 let data=load();
 let view=new Date(); view.setDate(1);
-let selKey=null, selRate=null, selDrink=0;
+let selKey=null, selRate=null, selDrink=null;
+
+function fmt1(n){ return (Math.round(n*10)/10).toFixed(1); }
 
 function load(){
   try{const r=JSON.parse(localStorage.getItem(KEY)); return (r&&r.entries)?r:{entries:{}};}
@@ -233,6 +238,32 @@ function load(){
 function save(){ localStorage.setItem(KEY,JSON.stringify(data)); }
 function keyOf(y,m,d){ return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"); }
 function todayKey(){ const t=new Date(); return keyOf(t.getFullYear(),t.getMonth(),t.getDate()); }
+
+/* ---------- 체중 3칸 입력 ---------- */
+const wDigits=[document.getElementById("wD1"),document.getElementById("wD2"),document.getElementById("wD3")];
+wDigits.forEach((el,i)=>{
+  el.addEventListener("input",()=>{
+    el.value=el.value.replace(/[^0-9]/g,"").slice(0,1);
+    if(el.value!=="" && i<2) wDigits[i+1].focus();
+  });
+  el.addEventListener("keydown",(e)=>{
+    if(e.key==="Backspace" && el.value==="" && i>0){ wDigits[i-1].focus(); }
+  });
+});
+function digitsToWeight(){
+  const d1=wDigits[0].value.trim(), d2=wDigits[1].value.trim(), d3=wDigits[2].value.trim();
+  if(d1===""||d2===""||d3==="") return null;
+  const w=parseFloat(d1+d2+"."+d3);
+  return isNaN(w)?null:w;
+}
+function weightToDigits(w){
+  if(w==null) return ["","",""];
+  const whole=Math.floor(w);
+  const dec=Math.round((w-whole)*10);
+  const tens=Math.floor(whole/10);
+  const ones=whole%10;
+  return [String(tens),String(ones),String(dec)];
+}
 
 /* ---------- 캘린더 ---------- */
 function renderCalendar(){
@@ -250,7 +281,7 @@ function renderCalendar(){
     const cell=document.createElement("div");
     cell.className="cell"+((first+d-1)%7===0?" sun":"")+(k===tk?" today":"");
     let html='<div class="d">'+d+'</div>';
-    if(rec&&rec.w!=null) html+='<div class="w tabnum">'+rec.w+'</div>';
+    if(rec&&rec.w!=null) html+='<div class="w tabnum">'+fmt1(rec.w)+'</div>';
     if(rec&&rec.f) html+='<div class="dot" style="background:'+FOOD_COLOR[rec.f]+'"></div>';
     cell.innerHTML=html;
     cell.onclick=()=>openSheet(k);
@@ -264,9 +295,10 @@ function openSheet(k){
   const [y,m,d]=k.split("-").map(Number);
   document.getElementById("sheetDate").textContent=y+"년 "+m+"월 "+d+"일";
   const rec=data.entries[k]||{};
-  document.getElementById("wInput").value=(rec.w!=null?rec.w:"");
+  const [d1,d2,d3]=weightToDigits(rec.w!=null?rec.w:null);
+  wDigits[0].value=d1; wDigits[1].value=d2; wDigits[2].value=d3;
   selRate=rec.f||null;
-  selDrink=(rec.a===true)?1:0;
+  selDrink=(rec.a===true)?1:null;
   paintRate(); paintDrink();
   document.getElementById("delBtn").style.display=data.entries[k]?"block":"none";
   document.getElementById("backdrop").classList.add("show");
@@ -286,14 +318,13 @@ document.querySelectorAll("#rate button").forEach(b=>{
   b.onclick=()=>{ selRate=(selRate===b.dataset.v?null:b.dataset.v); paintRate(); };
 });
 document.querySelectorAll("#drink button").forEach(b=>{
-  b.onclick=()=>{ selDrink=+b.dataset.a; paintDrink(); };
+  b.onclick=()=>{ selDrink=(selDrink===+b.dataset.a?null:+b.dataset.a); paintDrink(); };
 });
 document.getElementById("saveBtn").onclick=()=>{
-  const raw=document.getElementById("wInput").value.trim();
-  const w=raw===""?null:parseFloat(raw);
+  const w=digitsToWeight();
   if(w===null && !selRate && selDrink!==1){ closeSheet(); return; }
   data.entries[selKey]={};
-  if(w!==null && !isNaN(w)) data.entries[selKey].w=Math.round(w*10)/10;
+  if(w!==null) data.entries[selKey].w=Math.round(w*10)/10;
   if(selRate) data.entries[selKey].f=selRate;
   if(selDrink===1) data.entries[selKey].a=true;
   save(); closeSheet(); renderCalendar(); renderChart();
@@ -304,7 +335,7 @@ document.getElementById("delBtn").onclick=()=>{
 document.getElementById("backdrop").onclick=closeSheet;
 
 /* ---------- 그래프 ---------- */
-let period=7;
+let period=365;
 document.querySelectorAll("#seg button").forEach(b=>{
   b.onclick=()=>{
     document.querySelectorAll("#seg button").forEach(x=>x.classList.remove("on"));
@@ -339,14 +370,14 @@ function renderChart(){
   }
   const ws=s.map(p=>p.w);
   const mn=Math.min(...ws), mx=Math.max(...ws), last=s[s.length-1].w;
-  stLast.innerHTML=last+'<small> kg</small>';
-  stMin.innerHTML=mn+'<small> kg</small>';
-  stMax.innerHTML=mx+'<small> kg</small>';
+  stLast.innerHTML=fmt1(last)+'<small> kg</small>';
+  stMin.innerHTML=fmt1(mn)+'<small> kg</small>';
+  stMax.innerHTML=fmt1(mx)+'<small> kg</small>';
 
   const W=488, padL=8, padR=8, iw=W-padL-padR;
-  const lineTop=18, lineBottom=158, ih=lineBottom-lineTop;
-  const barBottom=216, barH=40, barTop=barBottom-barH;
-  const H=240;
+  const lineTop=14, lineBottom=118, ih=lineBottom-lineTop;
+  const barBottom=166, barH=28, barTop=barBottom-barH;
+  const H=188;
   const lo=mn-((mx-mn)*.25+.4), hi=mx+((mx-mn)*.25+.4);
   const span=(hi-lo)||1;
   const n=s.length;
@@ -385,7 +416,7 @@ function renderChart(){
   });
   const lx=x(n-1), ly=y(last);
   const lbx=Math.min(Math.max(lx,padL+14), W-padR-14);
-  dots+='<text x="'+lbx.toFixed(1)+'" y="'+(ly-12).toFixed(1)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#5B54E8">'+last+'</text>';
+  dots+='<text x="'+lbx.toFixed(1)+'" y="'+(ly-12).toFixed(1)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#5B54E8">'+fmt1(last)+'</text>';
 
   // 식사량 막대
   let bars='<line x1="'+padL+'" y1="'+barBottom+'" x2="'+(W-padR)+'" y2="'+barBottom+'" stroke="#EEF0F6" stroke-width="1"/>';
