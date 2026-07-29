@@ -345,31 +345,29 @@ document.querySelectorAll("#seg button").forEach(b=>{
 function seriesForPeriod(){
   const now=new Date(); now.setHours(0,0,0,0);
   const from=new Date(now); from.setDate(from.getDate()-(period-1));
-  const arr=[];
-  for(const k in data.entries){
-    const rec=data.entries[k];
-    if(rec.w==null) continue;
-    const [y,m,d]=k.split("-").map(Number);
-    const dt=new Date(y,m-1,d);
-    if(dt>=from && dt<=now) arr.push({dt,k,w:rec.w});
+  const days=[];
+  for(let dt=new Date(from); dt<=now; dt.setDate(dt.getDate()+1)){
+    const k=keyOf(dt.getFullYear(),dt.getMonth(),dt.getDate());
+    days.push({dt:new Date(dt), k, rec:data.entries[k]||null});
   }
-  arr.sort((a,b)=>a.dt-b.dt);
-  return arr;
+  return days;
 }
 function renderChart(){
-  const s=seriesForPeriod();
+  const days=seriesForPeriod();
+  const wPts=[];
+  days.forEach((d,i)=>{ if(d.rec && d.rec.w!=null) wPts.push({idx:i, w:d.rec.w}); });
   const box=document.getElementById("chartBox");
   const stLast=document.getElementById("stLast"),
         stMin=document.getElementById("stMin"),
         stMax=document.getElementById("stMax"),
         legendDrink=document.getElementById("legendDrink");
-  if(s.length===0){
+  if(wPts.length===0){
     box.innerHTML='<div class="empty-msg">이 기간에 기록된 체중이 없어요.<br>날짜를 눌러 체중을 입력해 보세요.</div>';
     stLast.textContent=stMin.textContent=stMax.textContent="–";
     legendDrink.innerHTML=""; return;
   }
-  const ws=s.map(p=>p.w);
-  const mn=Math.min(...ws), mx=Math.max(...ws), last=s[s.length-1].w;
+  const ws=wPts.map(p=>p.w);
+  const mn=Math.min(...ws), mx=Math.max(...ws), last=wPts[wPts.length-1].w;
   stLast.innerHTML=fmt1(last)+'<small> kg</small>';
   stMin.innerHTML=fmt1(mn)+'<small> kg</small>';
   stMax.innerHTML=fmt1(mx)+'<small> kg</small>';
@@ -380,7 +378,7 @@ function renderChart(){
   const H=234;
   const lo=mn-((mx-mn)*.25+.4), hi=mx+((mx-mn)*.25+.4);
   const span=(hi-lo)||1;
-  const n=s.length;
+  const n=days.length;
   const x=i=> n===1 ? padL+iw/2 : padL + (iw*i/(n-1));
   const y=v=> lineTop + ih*(1-(v-lo)/span);
 
@@ -393,8 +391,8 @@ function renderChart(){
     grid+='<text x="'+(W-padR)+'" y="'+(yy-4)+'" text-anchor="end" font-size="10" fill="#B7BCCD" font-weight="600">'+v.toFixed(1)+'</text>';
   });
 
-  // smooth line
-  const pts=s.map((p,i)=>[x(i),y(p.w)]);
+  // smooth line (기록된 체중이 있는 날짜만 연결, 위치는 전체 기간 기준)
+  const pts=wPts.map(p=>[x(p.idx),y(p.w)]);
   let dPath="M"+pts[0][0].toFixed(1)+","+pts[0][1].toFixed(1);
   for(let i=0;i<pts.length-1;i++){
     const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
@@ -404,25 +402,26 @@ function renderChart(){
   }
   const area=dPath+" L"+pts[pts.length-1][0].toFixed(1)+","+lineBottom+" L"+pts[0][0].toFixed(1)+","+lineBottom+" Z";
 
-  // dots = 음주 여부
+  // dots = 음주 여부 (체중 입력한 날만, 나머지는 비움)
   let drinkCount=0, dots="";
-  s.forEach((p,i)=>{
-    const drank=data.entries[p.k].a===true;
+  wPts.forEach((p,i)=>{
+    const drank=days[p.idx].rec.a===true;
     if(drank) drinkCount++;
-    const r=(i===n-1)?6:5;
+    const r=(i===wPts.length-1)?6:5;
     const fill=drank?DRINK_COLOR:"#fff";
     const stroke=drank?"#fff":"#B9BED0";
-    dots+='<circle cx="'+x(i).toFixed(1)+'" cy="'+y(p.w).toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>';
+    dots+='<circle cx="'+x(p.idx).toFixed(1)+'" cy="'+y(p.w).toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>';
   });
-  const lx=x(n-1), ly=y(last);
+  const lastIdx=wPts[wPts.length-1].idx;
+  const lx=x(lastIdx), ly=y(last);
   const lbx=Math.min(Math.max(lx,padL+14), W-padR-14);
   dots+='<text x="'+lbx.toFixed(1)+'" y="'+(ly-12).toFixed(1)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#5B54E8">'+fmt1(last)+'</text>';
 
-  // 식사량 막대
+  // 식사량 막대 (기록 없는 날은 비움, 전체 기간 날짜 위치 기준)
   let bars='<line x1="'+padL+'" y1="'+barBottom+'" x2="'+(W-padR)+'" y2="'+barBottom+'" stroke="#EEF0F6" stroke-width="1"/>';
-  const bw=Math.max(4, Math.min(14, (iw/n)*0.5));
-  s.forEach((p,i)=>{
-    const f=data.entries[p.k].f;
+  const bw=Math.max(3, Math.min(14, (iw/n)*0.5));
+  days.forEach((d,i)=>{
+    const f=d.rec&&d.rec.f;
     if(!f) return;
     const level=f==="상"?3:(f==="중"?2:1);
     const h=barH*level/3;
@@ -431,11 +430,11 @@ function renderChart(){
     bars+='<rect x="'+bx+'" y="'+by+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="2" fill="'+FOOD_COLOR[f]+'"/>';
   });
 
-  // x labels
+  // x labels (전체 기간의 처음/중간/마지막 날짜)
   const idxs=n<=2?[0,n-1]:[0,Math.floor((n-1)/2),n-1];
   let xlab="";
   [...new Set(idxs)].forEach(i=>{
-    const p=s[i]; const lab=(p.dt.getMonth()+1)+"/"+p.dt.getDate();
+    const dt=days[i].dt; const lab=(dt.getMonth()+1)+"/"+dt.getDate();
     let anchor="middle"; if(i===0)anchor="start"; if(i===n-1)anchor="end";
     xlab+='<text x="'+x(i).toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+anchor+'" font-size="10" fill="#B7BCCD" font-weight="600">'+lab+'</text>';
   });
