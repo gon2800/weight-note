@@ -28,31 +28,31 @@
     padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:520px; margin:0 auto; padding:10px 12px 14px}
+  .wrap{max-width:520px; margin:0 auto; padding:12px 14px 16px}
   .tabnum{font-variant-numeric:tabular-nums; font-feature-settings:"tnum"}
 
-  .top{display:flex; align-items:center; justify-content:space-between; padding:4px 2px 8px}
-  .brand{display:flex; align-items:center; gap:8px; min-width:0}
-  .brand .logo{width:30px;height:30px;border-radius:9px;object-fit:cover;display:block;flex:0 0 auto}
-  .brand h1{font-size:15px; margin:0; letter-spacing:-.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .iconbtn{border:none;background:var(--card);width:34px;height:34px;border-radius:11px;
-    box-shadow:var(--shadow); color:var(--ink); font-size:16px; cursor:pointer; flex:0 0 auto}
+  .top{display:flex; align-items:center; justify-content:space-between; padding:8px 4px 14px}
+  .brand{display:flex; align-items:center; gap:10px; min-width:0}
+  .brand .logo{width:42px;height:42px;border-radius:13px;object-fit:cover;display:block;flex:0 0 auto}
+  .brand h1{font-size:20px; margin:0; letter-spacing:-.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .iconbtn{border:none;background:var(--card);width:40px;height:40px;border-radius:12px;
+    box-shadow:var(--shadow); color:var(--ink); font-size:18px; cursor:pointer; flex:0 0 auto}
 
-  .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; margin-bottom:10px}
+  .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px; margin-bottom:12px}
 
-  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-  .cal-title{font-size:15px;font-weight:800;letter-spacing:-.3px}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cal-title{font-size:16px;font-weight:800;letter-spacing:-.3px}
   .cal-nav{display:flex;gap:6px;align-items:center}
-  .navbtn{border:none;background:var(--bg);width:30px;height:30px;border-radius:9px;
-    color:var(--ink);font-size:14px;cursor:pointer}
+  .navbtn{border:none;background:var(--bg);width:32px;height:32px;border-radius:9px;
+    color:var(--ink);font-size:15px;cursor:pointer}
   .today-btn{border:none;background:var(--accent-soft);color:var(--accent);font-weight:700;
-    font-size:11px;padding:0 10px;height:30px;border-radius:9px;cursor:pointer}
+    font-size:12px;padding:0 11px;height:32px;border-radius:9px;cursor:pointer}
   .dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;
-    font-size:10px;font-weight:700;color:var(--sub);padding-bottom:4px}
+    font-size:11px;font-weight:700;color:var(--sub);padding-bottom:6px}
   .dow .sun{color:#E9698A}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-  .cell{aspect-ratio:1/0.92;border-radius:10px;display:flex;flex-direction:column;
-    align-items:center;padding-top:4px;cursor:pointer;position:relative;background:transparent;
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cell{aspect-ratio:1/1.12;border-radius:11px;display:flex;flex-direction:column;
+    align-items:center;padding-top:5px;cursor:pointer;position:relative;background:transparent;
     border:1px solid transparent;transition:background .12s}
   .cell.empty{cursor:default}
   .cell:active{background:var(--bg)}
@@ -65,20 +65,20 @@
   .cell .dot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:5px}
   .cell.today .dot{outline:1.5px solid rgba(255,255,255,.6)}
 
-  .seg{display:flex;background:var(--bg);border-radius:11px;padding:3px;gap:3px;margin-bottom:8px}
-  .seg button{flex:1;border:none;background:transparent;padding:6px 0;border-radius:8px;
-    font-size:12px;font-weight:700;color:var(--sub);cursor:pointer}
+  .seg{display:flex;background:var(--bg);border-radius:12px;padding:4px;gap:4px;margin-bottom:10px}
+  .seg button{flex:1;border:none;background:transparent;padding:8px 0;border-radius:9px;
+    font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}
   .seg button.on{background:var(--card);color:var(--accent);box-shadow:var(--shadow)}
-  .chart-stats{display:flex;gap:6px;margin-bottom:6px}
-  .stat{flex:1;background:var(--bg);border-radius:10px;padding:6px 10px;
+  .chart-stats{display:flex;gap:8px;margin-bottom:10px}
+  .stat{flex:1;background:var(--bg);border-radius:11px;padding:9px 12px;
     display:flex;align-items:center;justify-content:space-between;gap:6px}
-  .stat .lab{font-size:10px;color:var(--sub);font-weight:700;white-space:nowrap}
-  .stat .val{font-size:14px;font-weight:800}
-  .stat .val small{font-size:10px;color:var(--sub);font-weight:700}
+  .stat .lab{font-size:11px;color:var(--sub);font-weight:700;white-space:nowrap}
+  .stat .val{font-size:16px;font-weight:800}
+  .stat .val small{font-size:11px;color:var(--sub);font-weight:700}
   .chart-box{width:100%}
-  .empty-msg{text-align:center;color:var(--sub);font-size:12px;padding:24px 0;font-weight:600}
-  .legend{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:4px;
-    font-size:10px;color:var(--sub);font-weight:600;flex-wrap:wrap}
+  .empty-msg{text-align:center;color:var(--sub);font-size:13px;padding:32px 0;font-weight:600}
+  .legend{display:flex;gap:13px;justify-content:center;align-items:center;margin-top:8px;
+    font-size:11px;color:var(--sub);font-weight:600;flex-wrap:wrap}
   .legend .cap{color:var(--ink);font-weight:800}
   .legend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
   .legend .bar-i{width:6px;height:10px;border-radius:2px}
@@ -375,9 +375,9 @@ function renderChart(){
   stMax.innerHTML=fmt1(mx)+'<small> kg</small>';
 
   const W=488, padL=8, padR=8, iw=W-padL-padR;
-  const lineTop=14, lineBottom=118, ih=lineBottom-lineTop;
-  const barBottom=166, barH=28, barTop=barBottom-barH;
-  const H=188;
+  const lineTop=16, lineBottom=150, ih=lineBottom-lineTop;
+  const barBottom=208, barH=38, barTop=barBottom-barH;
+  const H=234;
   const lo=mn-((mx-mn)*.25+.4), hi=mx+((mx-mn)*.25+.4);
   const span=(hi-lo)||1;
   const n=s.length;
