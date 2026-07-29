@@ -50,8 +50,8 @@
   .dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;
     font-size:11px;font-weight:700;color:var(--sub);padding-bottom:6px}
   .dow .sun{color:#E9698A}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-  .cell{aspect-ratio:1/1.12;border-radius:11px;display:flex;flex-direction:column;
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .cell{aspect-ratio:1/1.04;border-radius:11px;display:flex;flex-direction:column;
     align-items:center;padding-top:5px;cursor:pointer;position:relative;background:transparent;
     border:1px solid transparent;transition:background .12s}
   .cell.empty{cursor:default}
@@ -378,9 +378,9 @@ function renderChart(){
   stMax.innerHTML=fmt1(mx)+'<small> kg</small>';
 
   const W=488, padL=8, padR=8, iw=W-padL-padR;
-  const lineTop=16, lineBottom=146, ih=lineBottom-lineTop;
-  const barBottom=202, barH=36, barTop=barBottom-barH;
-  const H=226;
+  const lineTop=14, lineBottom=138, ih=lineBottom-lineTop;
+  const barBottom=194, barH=34, barTop=barBottom-barH;
+  const H=218;
   const lo=mn-((mx-mn)*.25+.4), hi=mx+((mx-mn)*.25+.4);
   const span=(hi-lo)||1;
   const n=days.length;
