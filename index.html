@@ -28,19 +28,19 @@
     padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:520px; margin:0 auto; padding:12px 14px 16px}
+  .wrap{max-width:520px; margin:0 auto; padding:10px 14px 10px}
   .tabnum{font-variant-numeric:tabular-nums; font-feature-settings:"tnum"}
 
-  .top{display:flex; align-items:center; justify-content:space-between; padding:8px 4px 14px}
+  .top{display:flex; align-items:center; justify-content:space-between; padding:6px 4px 10px}
   .brand{display:flex; align-items:center; gap:10px; min-width:0}
   .brand .logo{width:42px;height:42px;border-radius:13px;object-fit:cover;display:block;flex:0 0 auto}
   .brand h1{font-size:20px; margin:0; letter-spacing:-.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .iconbtn{border:none;background:var(--card);width:40px;height:40px;border-radius:12px;
     box-shadow:var(--shadow); color:var(--ink); font-size:18px; cursor:pointer; flex:0 0 auto}
 
-  .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px; margin-bottom:12px}
+  .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; margin-bottom:10px}
 
-  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
   .cal-title{font-size:16px;font-weight:800;letter-spacing:-.3px}
   .cal-nav{display:flex;gap:6px;align-items:center}
   .navbtn{border:none;background:var(--bg);width:32px;height:32px;border-radius:9px;
@@ -65,11 +65,11 @@
   .cell .dot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:5px}
   .cell.today .dot{outline:1.5px solid rgba(255,255,255,.6)}
 
-  .seg{display:flex;background:var(--bg);border-radius:12px;padding:4px;gap:4px;margin-bottom:10px}
+  .seg{display:flex;background:var(--bg);border-radius:12px;padding:4px;gap:4px;margin-bottom:8px}
   .seg button{flex:1;border:none;background:transparent;padding:8px 0;border-radius:9px;
     font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}
   .seg button.on{background:var(--card);color:var(--accent);box-shadow:var(--shadow)}
-  .chart-stats{display:flex;gap:8px;margin-bottom:10px}
+  .chart-stats{display:flex;gap:8px;margin-bottom:8px}
   .stat{flex:1;background:var(--bg);border-radius:11px;padding:9px 12px;
     display:flex;align-items:center;justify-content:space-between;gap:6px}
   .stat .lab{font-size:11px;color:var(--sub);font-weight:700;white-space:nowrap}
@@ -378,9 +378,9 @@ function renderChart(){
   stMax.innerHTML=fmt1(mx)+'<small> kg</small>';
 
   const W=488, padL=8, padR=8, iw=W-padL-padR;
-  const lineTop=16, lineBottom=150, ih=lineBottom-lineTop;
-  const barBottom=208, barH=38, barTop=barBottom-barH;
-  const H=234;
+  const lineTop=16, lineBottom=146, ih=lineBottom-lineTop;
+  const barBottom=202, barH=36, barTop=barBottom-barH;
+  const H=226;
   const lo=mn-((mx-mn)*.25+.4), hi=mx+((mx-mn)*.25+.4);
   const span=(hi-lo)||1;
   const n=days.length;
@@ -412,7 +412,7 @@ function renderChart(){
   wPts.forEach((p,i)=>{
     const drank=days[p.idx].rec.a===true;
     if(drank) drinkCount++;
-    const r=(i===wPts.length-1)?6:5;
+    const r=(i===wPts.length-1)?7:6;
     const fill=drank?DRINK_COLOR:"#fff";
     const stroke=drank?"#fff":"#B9BED0";
     dots+='<circle cx="'+x(p.idx).toFixed(1)+'" cy="'+y(p.w).toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>';
