@@ -350,7 +350,12 @@ function seriesForPeriod(){
     const k=keyOf(dt.getFullYear(),dt.getMonth(),dt.getDate());
     days.push({dt:new Date(dt), k, rec:data.entries[k]||null});
   }
-  return days;
+  // 기간과 무관하게 그래프 양쪽 끝을 항상 꽉 채우기 위해,
+  // 실제 기록이 있는 첫 날짜 ~ 마지막 날짜 구간만 사용한다.
+  const recIdxs=[];
+  days.forEach((d,i)=>{ if(d.rec) recIdxs.push(i); });
+  if(recIdxs.length===0) return [];
+  return days.slice(recIdxs[0], recIdxs[recIdxs.length-1]+1);
 }
 function renderChart(){
   const days=seriesForPeriod();
