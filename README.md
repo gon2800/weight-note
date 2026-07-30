@@ -38,7 +38,7 @@ localStorage key: "weightNote.v1"
 - 백업 JSON도 동일한 `{ entries: {...} }` 구조. 복원은 병합(merge) 방식.
 
 ## 5. 색상 / 디자인 토큰
-- accent(체중선·UI): `#5B54E8`
+- accent(체중선·UI): `#22A55E`
 - 음주 dot: `#EF6C6C`(마심) / `#fff`+회색테두리(안 마심)
 - 식사량 막대: 하 `#3FB950` · 중 `#F0B429` · 상 `#E8894A` (음주 적색과 안 겹치게 상은 주황)
 
