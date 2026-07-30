@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#22A55E">
+<meta name="theme-color" content="#5B54E8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="체중 노트">
@@ -14,7 +14,7 @@
 <style>
   :root{
     --bg:#F5F6FB; --card:#FFFFFF; --ink:#1F2437; --sub:#7A809A;
-    --line:#EBEDF4; --accent:#22A55E; --accent-soft:#E5F7EC;
+    --line:#EBEDF4; --accent:#5B54E8; --accent-soft:#EEEDFD;
     --drink:#EF6C6C;
     --food-hi:#E8894A; --food-mid:#F0B429; --food-lo:#3FB950;
     --shadow:0 1px 2px rgba(31,36,55,.04),0 8px 24px rgba(31,36,55,.06);
@@ -420,7 +420,7 @@ function renderChart(){
   const lastIdx=wPts[wPts.length-1].idx;
   const lx=x(lastIdx), ly=y(last);
   const lbx=Math.min(Math.max(lx,padL+14), W-padR-14);
-  dots+='<text x="'+lbx.toFixed(1)+'" y="'+(ly-12).toFixed(1)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#22A55E">'+fmt1(last)+'</text>';
+  dots+='<text x="'+lbx.toFixed(1)+'" y="'+(ly-12).toFixed(1)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#5B54E8">'+fmt1(last)+'</text>';
 
   // 식사량 막대 (기록 없는 날은 비움, 전체 기간 날짜 위치 기준)
   let bars='<line x1="'+padL+'" y1="'+barBottom+'" x2="'+(W-padR)+'" y2="'+barBottom+'" stroke="#EEF0F6" stroke-width="1"/>';
@@ -447,12 +447,12 @@ function renderChart(){
   box.innerHTML=
     '<svg viewBox="0 0 '+W+' '+H+'" width="100%" preserveAspectRatio="xMidYMid meet" style="display:block">'+
       '<defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">'+
-        '<stop offset="0" stop-color="#22A55E" stop-opacity=".16"/>'+
-        '<stop offset="1" stop-color="#22A55E" stop-opacity="0"/>'+
+        '<stop offset="0" stop-color="#5B54E8" stop-opacity=".16"/>'+
+        '<stop offset="1" stop-color="#5B54E8" stop-opacity="0"/>'+
       '</linearGradient></defs>'+
       grid+
       '<path d="'+area+'" fill="url(#fill)"/>'+
-      '<path d="'+dPath+'" fill="none" stroke="#22A55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
+      '<path d="'+dPath+'" fill="none" stroke="#5B54E8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
       dots+bars+xlab+
     '</svg>';
 
