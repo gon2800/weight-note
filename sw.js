@@ -1,4 +1,4 @@
-const CACHE="weight-note-v5";
+const CACHE="weight-note-v6";
 // index.html은 캐시 목록에 넣지 않는다 (Cloudflare가 /index.html을 리다이렉트하므로).
 // 루트 "/"만 앱 셸로 캐시한다.
 const ASSETS=["/","/manifest.webmanifest","/icon-192.png","/icon-512.png"];

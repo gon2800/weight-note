@@ -215,6 +215,7 @@
 <div class="menu" id="menu">
   <div class="mbd"></div>
   <div class="mpanel">
+    <button id="installBtn" style="display:none">홈 화면에 추가</button>
     <button id="exportBtn">데이터 백업 (내보내기)</button>
     <button id="importBtn">데이터 복원 (불러오기)</button>
   </div>
@@ -500,8 +501,34 @@ document.getElementById("fileInput").onchange=e=>{
 
 /* ---------- 서비스워커 등록 (오프라인 + 앱 설치) ---------- */
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").catch(err=>console.error("SW 등록 실패:",err));
+  });
 }
+
+/* ---------- 홈 화면에 추가 (PWA 설치 프롬프트) ---------- */
+const installBtn=document.getElementById("installBtn");
+let deferredPrompt=null;
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
+}
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  if(!isStandalone()) installBtn.style.display="block";
+});
+installBtn.onclick=async()=>{
+  menu.classList.remove("show");
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  installBtn.style.display="none";
+};
+window.addEventListener("appinstalled",()=>{
+  deferredPrompt=null;
+  installBtn.style.display="none";
+});
 
 renderCalendar(); renderChart();
 </script>
