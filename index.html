@@ -62,19 +62,18 @@
   .cell.today .d{color:#fff}
   .cell .w{font-size:10px;font-weight:800;color:var(--accent);margin-top:3px}
   .cell.today .w{color:#fff}
-  .cell .dot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:5px}
-  .cell.today .dot{outline:1.5px solid rgba(255,255,255,.6)}
+
+  .stats-row{display:flex;gap:10px;margin-bottom:10px}
+  .stat-tile{flex:1;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .stat-tile .lab{font-size:11px;color:var(--sub);font-weight:700}
+  .stat-tile .val{font-size:17px;font-weight:800}
+  .stat-tile .val small{font-size:11px;color:var(--sub);font-weight:700}
 
   .seg{display:flex;background:transparent;border-radius:12px;padding:4px;gap:4px;margin-bottom:8px}
   .seg button{flex:1;border:2px solid var(--line);background:var(--card);padding:8px 0;border-radius:9px;
     font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}
   .seg button.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
-  .chart-stats{display:flex;gap:8px;margin-bottom:8px}
-  .stat{flex:1;background:var(--bg);border-radius:11px;padding:9px 12px;
-    display:flex;align-items:center;justify-content:space-between;gap:6px}
-  .stat .lab{font-size:11px;color:var(--sub);font-weight:700;white-space:nowrap}
-  .stat .val{font-size:16px;font-weight:800}
-  .stat .val small{font-size:11px;color:var(--sub);font-weight:700}
   .chart-box{width:100%}
   .empty-msg{text-align:center;color:var(--sub);font-size:13px;padding:32px 0;font-weight:600}
   .legend{display:flex;gap:13px;justify-content:center;align-items:center;margin-top:8px;
@@ -114,8 +113,9 @@
   .drink{margin-bottom:24px}
   .drink button{flex:1;border:2px solid var(--line);background:var(--card);padding:14px 0;
     border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;color:var(--ink)}
-  .drink button.sel[data-a="0"]{border-color:var(--ink);background:var(--bg)}
-  .drink button.sel[data-a="1"]{border-color:var(--drink);background:#FDECEC;color:var(--drink)}
+  .drink button.sel[data-a="0"]{border-color:var(--food-lo);background:#E9F8ED;color:var(--food-lo)}
+  .drink button.sel[data-a="1"]{border-color:var(--food-mid);background:#FEF6D8;color:var(--food-mid)}
+  .drink button.sel[data-a="2"]{border-color:var(--food-hi);background:#FDECEC;color:var(--food-hi)}
   .actions{display:flex;gap:10px}
   .btn{flex:1;border:none;padding:15px 0;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer}
   .btn.save{background:var(--accent);color:#fff}
@@ -145,6 +145,12 @@
     <button class="iconbtn" id="menuBtn" aria-label="메뉴">⋯</button>
   </div>
 
+  <div class="stats-row">
+    <div class="stat-tile"><span class="lab">최근</span><span class="val tabnum" id="stLast">–</span></div>
+    <div class="stat-tile"><span class="lab">최저</span><span class="val tabnum" id="stMin">–</span></div>
+    <div class="stat-tile"><span class="lab">최고</span><span class="val tabnum" id="stMax">–</span></div>
+  </div>
+
   <div class="card">
     <div class="cal-head">
       <div class="cal-title" id="calTitle">2026 / 07</div>
@@ -166,11 +172,6 @@
       <button data-p="31">1개월</button>
       <button data-p="183">6개월</button>
       <button data-p="365" class="on">1년</button>
-    </div>
-    <div class="chart-stats">
-      <div class="stat"><span class="lab">최근</span><span class="val tabnum" id="stLast">–</span></div>
-      <div class="stat"><span class="lab">최저</span><span class="val tabnum" id="stMin">–</span></div>
-      <div class="stat"><span class="lab">최고</span><span class="val tabnum" id="stMax">–</span></div>
     </div>
     <div class="chart-box" id="chartBox"></div>
     <div class="legend" id="legendDrink"></div>
@@ -204,7 +205,8 @@
   <div class="field-lab">음주 여부</div>
   <div class="drink" id="drink">
     <button data-a="0">안 마심</button>
-    <button data-a="1">마심 🍷</button>
+    <button data-a="1">마심</button>
+    <button data-a="2">과음</button>
   </div>
   <div class="actions">
     <button class="btn del" id="delBtn">삭제</button>
@@ -225,12 +227,17 @@
 <script>
 const KEY="weightNote.v1";
 const FOOD_COLOR={"상":"#E5484D","중":"#EAB308","하":"#3FB950"};
-const DRINK_COLOR="#EF6C6C";
+const DRINK_COLOR={0:"#3FB950",1:"#EAB308",2:"#E5484D"};
 let data=load();
 let view=new Date(); view.setDate(1);
 let selKey=null, selRate=null, selDrink=null;
 
 function fmt1(n){ return (Math.round(n*10)/10).toFixed(1); }
+function normalizeDrink(a){
+  if(a===true) return 1; // 이전 버전(불리언) 데이터 호환
+  if(a===0||a===1||a===2) return a;
+  return null;
+}
 
 function load(){
   try{const r=JSON.parse(localStorage.getItem(KEY)); return (r&&r.entries)?r:{entries:{}};}
@@ -283,7 +290,6 @@ function renderCalendar(){
     cell.className="cell"+((first+d-1)%7===0?" sun":"")+(k===tk?" today":"");
     let html='<div class="d">'+d+'</div>';
     if(rec&&rec.w!=null) html+='<div class="w tabnum">'+fmt1(rec.w)+'</div>';
-    if(rec&&rec.f) html+='<div class="dot" style="background:'+FOOD_COLOR[rec.f]+'"></div>';
     cell.innerHTML=html;
     cell.onclick=()=>openSheet(k);
     grid.appendChild(cell);
@@ -299,7 +305,7 @@ function openSheet(k){
   const [d1,d2,d3]=weightToDigits(rec.w!=null?rec.w:null);
   wDigits[0].value=d1; wDigits[1].value=d2; wDigits[2].value=d3;
   selRate=rec.f||null;
-  selDrink=(rec.a===true)?1:null;
+  selDrink=normalizeDrink(rec.a);
   paintRate(); paintDrink();
   document.getElementById("delBtn").style.display=data.entries[k]?"block":"none";
   document.getElementById("backdrop").classList.add("show");
@@ -324,11 +330,11 @@ document.querySelectorAll("#drink button").forEach(b=>{
 });
 document.getElementById("saveBtn").onclick=()=>{
   const w=digitsToWeight();
-  if(w===null && !selRate && selDrink!==1){ closeSheet(); return; }
+  if(w===null && !selRate && selDrink===null){ closeSheet(); return; }
   data.entries[selKey]={};
   if(w!==null) data.entries[selKey].w=Math.round(w*10)/10;
   if(selRate) data.entries[selKey].f=selRate;
-  if(selDrink===1) data.entries[selKey].a=true;
+  if(selDrink!==null) data.entries[selKey].a=selDrink;
   save(); closeSheet(); renderCalendar(); renderChart();
 };
 document.getElementById("delBtn").onclick=()=>{
@@ -411,13 +417,14 @@ function renderChart(){
   const area=dPath+" L"+pts[pts.length-1][0].toFixed(1)+","+lineBottom+" L"+pts[0][0].toFixed(1)+","+lineBottom+" Z";
 
   // dots = 음주 여부 (체중 입력한 날만, 나머지는 비움)
-  let drinkCount=0, dots="";
+  let drinkCount=0, overCount=0, dots="";
   wPts.forEach((p,i)=>{
-    const drank=days[p.idx].rec.a===true;
-    if(drank) drinkCount++;
+    const lv=normalizeDrink(days[p.idx].rec.a);
+    if(lv===1) drinkCount++;
+    if(lv===2){ drinkCount++; overCount++; }
     const r=(i===wPts.length-1)?7:6;
-    const fill=drank?DRINK_COLOR:"#fff";
-    const stroke=drank?"#fff":"#B9BED0";
+    const fill=(lv!=null)?DRINK_COLOR[lv]:"#fff";
+    const stroke=(lv!=null)?"#fff":"#B9BED0";
     dots+='<circle cx="'+x(p.idx).toFixed(1)+'" cy="'+y(p.w).toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>';
   });
   const lastIdx=wPts[wPts.length-1].idx;
@@ -459,12 +466,12 @@ function renderChart(){
       dots+bars+xlab+
     '</svg>';
 
-  const pct=Math.round(drinkCount/n*100);
   legendDrink.innerHTML=
     '<span class="cap">음주</span>'+
-    '<span><i style="background:'+DRINK_COLOR+'"></i>음주</span>'+
-    '<span><i style="background:#fff;border:1.5px solid #B9BED0"></i>안 마심</span>'+
-    '<span class="pct">이 기간 '+drinkCount+'일 · '+pct+'%</span>';
+    '<span><i style="background:'+DRINK_COLOR[0]+'"></i>안 마심</span>'+
+    '<span><i style="background:'+DRINK_COLOR[1]+'"></i>마심</span>'+
+    '<span><i style="background:'+DRINK_COLOR[2]+'"></i>과음</span>'+
+    '<span class="pct">마심 '+drinkCount+'일 · 과음 '+overCount+'일</span>';
 }
 
 /* ---------- 네비게이션 ---------- */
