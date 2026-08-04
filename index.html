@@ -63,9 +63,11 @@
   .cell .w{font-size:10px;font-weight:800;color:var(--accent);margin-top:3px}
   .cell.today .w{color:#fff}
 
-  .stats-row{display:flex;gap:10px;margin-bottom:10px}
-  .stat-tile{flex:1;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .stats-row{display:flex;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:12px 8px;margin-bottom:10px}
+  .stat-tile{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+    border-left:1px solid var(--line)}
+  .stat-tile:first-child{border-left:none}
   .stat-tile .lab{font-size:11px;color:var(--sub);font-weight:700}
   .stat-tile .val{font-size:17px;font-weight:800}
   .stat-tile .val small{font-size:11px;color:var(--sub);font-weight:700}
@@ -113,9 +115,8 @@
   .drink{margin-bottom:24px}
   .drink button{flex:1;border:2px solid var(--line);background:var(--card);padding:14px 0;
     border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;color:var(--ink)}
-  .drink button.sel[data-a="0"]{border-color:var(--food-lo);background:#E9F8ED;color:var(--food-lo)}
-  .drink button.sel[data-a="1"]{border-color:var(--food-mid);background:#FEF6D8;color:var(--food-mid)}
-  .drink button.sel[data-a="2"]{border-color:var(--food-hi);background:#FDECEC;color:var(--food-hi)}
+  .drink button.sel[data-a="0"]{border-color:var(--ink);background:var(--bg)}
+  .drink button.sel[data-a="1"]{border-color:var(--drink);background:#FDECEC;color:var(--drink)}
   .actions{display:flex;gap:10px}
   .btn{flex:1;border:none;padding:15px 0;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer}
   .btn.save{background:var(--accent);color:#fff}
@@ -206,7 +207,6 @@
   <div class="drink" id="drink">
     <button data-a="0">안 마심</button>
     <button data-a="1">마심</button>
-    <button data-a="2">과음</button>
   </div>
   <div class="actions">
     <button class="btn del" id="delBtn">삭제</button>
@@ -227,7 +227,7 @@
 <script>
 const KEY="weightNote.v1";
 const FOOD_COLOR={"상":"#E5484D","중":"#EAB308","하":"#3FB950"};
-const DRINK_COLOR={0:"#3FB950",1:"#EAB308",2:"#E5484D"};
+const DRINK_COLOR="#EF6C6C";
 let data=load();
 let view=new Date(); view.setDate(1);
 let selKey=null, selRate=null, selDrink=null;
@@ -235,7 +235,8 @@ let selKey=null, selRate=null, selDrink=null;
 function fmt1(n){ return (Math.round(n*10)/10).toFixed(1); }
 function normalizeDrink(a){
   if(a===true) return 1; // 이전 버전(불리언) 데이터 호환
-  if(a===0||a===1||a===2) return a;
+  if(a===2) return 1; // 이전 3단계(과음) 데이터 호환
+  if(a===0||a===1) return a;
   return null;
 }
 
@@ -417,14 +418,13 @@ function renderChart(){
   const area=dPath+" L"+pts[pts.length-1][0].toFixed(1)+","+lineBottom+" L"+pts[0][0].toFixed(1)+","+lineBottom+" Z";
 
   // dots = 음주 여부 (체중 입력한 날만, 나머지는 비움)
-  let drinkCount=0, overCount=0, dots="";
+  let drinkCount=0, dots="";
   wPts.forEach((p,i)=>{
-    const lv=normalizeDrink(days[p.idx].rec.a);
-    if(lv===1) drinkCount++;
-    if(lv===2){ drinkCount++; overCount++; }
+    const drank=normalizeDrink(days[p.idx].rec.a)===1;
+    if(drank) drinkCount++;
     const r=(i===wPts.length-1)?7:6;
-    const fill=(lv!=null)?DRINK_COLOR[lv]:"#fff";
-    const stroke=(lv!=null)?"#fff":"#B9BED0";
+    const fill=drank?DRINK_COLOR:"#fff";
+    const stroke=drank?"#fff":"#B9BED0";
     dots+='<circle cx="'+x(p.idx).toFixed(1)+'" cy="'+y(p.w).toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>';
   });
   const lastIdx=wPts[wPts.length-1].idx;
@@ -466,12 +466,12 @@ function renderChart(){
       dots+bars+xlab+
     '</svg>';
 
+  const pct=Math.round(drinkCount/n*100);
   legendDrink.innerHTML=
     '<span class="cap">음주</span>'+
-    '<span><i style="background:'+DRINK_COLOR[0]+'"></i>안 마심</span>'+
-    '<span><i style="background:'+DRINK_COLOR[1]+'"></i>마심</span>'+
-    '<span><i style="background:'+DRINK_COLOR[2]+'"></i>과음</span>'+
-    '<span class="pct">마심 '+drinkCount+'일 · 과음 '+overCount+'일</span>';
+    '<span><i style="background:'+DRINK_COLOR+'"></i>음주</span>'+
+    '<span><i style="background:#fff;border:1.5px solid #B9BED0"></i>안 마심</span>'+
+    '<span class="pct">이 기간 '+drinkCount+'일 · '+pct+'%</span>';
 }
 
 /* ---------- 네비게이션 ---------- */
