@@ -377,61 +377,83 @@ function renderChart(){
         stMin=document.getElementById("stMin"),
         stMax=document.getElementById("stMax"),
         legendDrink=document.getElementById("legendDrink");
-  if(wPts.length===0){
-    box.innerHTML='<div class="empty-msg">이 기간에 기록된 체중이 없어요.<br>날짜를 눌러 체중을 입력해 보세요.</div>';
+  if(days.length===0){
+    box.innerHTML='<div class="empty-msg">이 기간에 기록이 없어요.<br>날짜를 눌러 기록을 입력해 보세요.</div>';
     stLast.textContent=stMin.textContent=stMax.textContent="–";
     legendDrink.innerHTML=""; return;
   }
+  const hasWeight=wPts.length>0;
   const ws=wPts.map(p=>p.w);
-  const mn=Math.min(...ws), mx=Math.max(...ws), last=wPts[wPts.length-1].w;
-  stLast.innerHTML=fmt1(last)+'<small> kg</small>';
-  stMin.innerHTML=fmt1(mn)+'<small> kg</small>';
-  stMax.innerHTML=fmt1(mx)+'<small> kg</small>';
+  const mn=hasWeight?Math.min(...ws):0, mx=hasWeight?Math.max(...ws):0, last=hasWeight?wPts[wPts.length-1].w:null;
+  if(hasWeight){
+    stLast.innerHTML=fmt1(last)+'<small> kg</small>';
+    stMin.innerHTML=fmt1(mn)+'<small> kg</small>';
+    stMax.innerHTML=fmt1(mx)+'<small> kg</small>';
+  }else{
+    stLast.textContent=stMin.textContent=stMax.textContent="–";
+  }
 
   const W=488, padL=8, padR=8, iw=W-padL-padR;
   const lineTop=14, lineBottom=138, ih=lineBottom-lineTop;
   const barBottom=194, barH=34, barTop=barBottom-barH;
   const H=218;
-  const lo=mn-((mx-mn)*.25+.4), hi=mx+((mx-mn)*.25+.4);
-  const span=(hi-lo)||1;
   const n=days.length;
   const x=i=> n===1 ? padL+iw/2 : padL + (iw*i/(n-1));
-  const y=v=> lineTop + ih*(1-(v-lo)/span);
+  const weightedIdx=new Set(wPts.map(p=>p.idx));
 
-  // gridlines
-  const gy=[mx,(mx+mn)/2,mn];
-  let grid="";
-  gy.forEach(v=>{
-    const yy=y(v).toFixed(1);
-    grid+='<line x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="#EEF0F6" stroke-width="1"/>';
-    grid+='<text x="'+(W-padR)+'" y="'+(yy-4)+'" text-anchor="end" font-size="10" fill="#B7BCCD" font-weight="600">'+v.toFixed(1)+'</text>';
-  });
+  let grid="", dPath="", area="", dots="";
+  if(hasWeight){
+    const lo=mn-((mx-mn)*.25+.4), hi=mx+((mx-mn)*.25+.4);
+    const span=(hi-lo)||1;
+    const y=v=> lineTop + ih*(1-(v-lo)/span);
 
-  // smooth line (기록된 체중이 있는 날짜만 연결, 위치는 전체 기간 기준)
-  const pts=wPts.map(p=>[x(p.idx),y(p.w)]);
-  let dPath="M"+pts[0][0].toFixed(1)+","+pts[0][1].toFixed(1);
-  for(let i=0;i<pts.length-1;i++){
-    const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
-    const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6;
-    const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
-    dPath+="C"+c1x.toFixed(1)+","+c1y.toFixed(1)+" "+c2x.toFixed(1)+","+c2y.toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
+    // gridlines
+    const gy=[mx,(mx+mn)/2,mn];
+    gy.forEach(v=>{
+      const yy=y(v).toFixed(1);
+      grid+='<line x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="#EEF0F6" stroke-width="1"/>';
+      grid+='<text x="'+(W-padR)+'" y="'+(yy-4)+'" text-anchor="end" font-size="10" fill="#B7BCCD" font-weight="600">'+v.toFixed(1)+'</text>';
+    });
+
+    // smooth line (기록된 체중이 있는 날짜만 연결, 위치는 전체 기간 기준)
+    const pts=wPts.map(p=>[x(p.idx),y(p.w)]);
+    dPath="M"+pts[0][0].toFixed(1)+","+pts[0][1].toFixed(1);
+    for(let i=0;i<pts.length-1;i++){
+      const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
+      const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6;
+      const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
+      dPath+="C"+c1x.toFixed(1)+","+c1y.toFixed(1)+" "+c2x.toFixed(1)+","+c2y.toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
+    }
+    area=dPath+" L"+pts[pts.length-1][0].toFixed(1)+","+lineBottom+" L"+pts[0][0].toFixed(1)+","+lineBottom+" Z";
+
+    // dots = 음주 여부 (체중 입력한 날만, 체중 없는 날은 아래쪽 보조 점으로 별도 표시)
+    wPts.forEach((p,i)=>{
+      const lv=normalizeDrink(days[p.idx].rec.a);
+      const r=(i===wPts.length-1)?7:6;
+      const fill=(lv!=null)?DRINK_COLOR[lv]:"#fff";
+      const stroke=(lv!=null)?"#fff":"#B9BED0";
+      dots+='<circle cx="'+x(p.idx).toFixed(1)+'" cy="'+y(p.w).toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>';
+    });
+    const lastIdx=wPts[wPts.length-1].idx;
+    const lx=x(lastIdx), ly=y(last);
+    const lbx=Math.min(Math.max(lx,padL+14), W-padR-14);
+    dots+='<text x="'+lbx.toFixed(1)+'" y="'+(ly-12).toFixed(1)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#5B54E8">'+fmt1(last)+'</text>';
   }
-  const area=dPath+" L"+pts[pts.length-1][0].toFixed(1)+","+lineBottom+" L"+pts[0][0].toFixed(1)+","+lineBottom+" Z";
 
-  // dots = 음주 여부 (체중 입력한 날만, 나머지는 비움)
-  let drinkCount=0, dots="";
-  wPts.forEach((p,i)=>{
-    const lv=normalizeDrink(days[p.idx].rec.a);
-    if(lv===1||lv===2) drinkCount++;
-    const r=(i===wPts.length-1)?7:6;
-    const fill=(lv!=null)?DRINK_COLOR[lv]:"#fff";
-    const stroke=(lv!=null)?"#fff":"#B9BED0";
-    dots+='<circle cx="'+x(p.idx).toFixed(1)+'" cy="'+y(p.w).toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>';
+  // 체중 없이 음주만 기록된 날 (라인 위에 표시할 수 없으니 라인-막대 사이에 보조 점으로 표시)
+  days.forEach((d,i)=>{
+    if(weightedIdx.has(i)) return;
+    const lv=d.rec?normalizeDrink(d.rec.a):null;
+    if(lv==null) return;
+    dots+='<circle cx="'+x(i).toFixed(1)+'" cy="149" r="5" fill="'+DRINK_COLOR[lv]+'" stroke="#fff" stroke-width="1.5"/>';
   });
-  const lastIdx=wPts[wPts.length-1].idx;
-  const lx=x(lastIdx), ly=y(last);
-  const lbx=Math.min(Math.max(lx,padL+14), W-padR-14);
-  dots+='<text x="'+lbx.toFixed(1)+'" y="'+(ly-12).toFixed(1)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#5B54E8">'+fmt1(last)+'</text>';
+
+  // 음주 전체 통계 (체중 입력 여부와 무관하게 전체 기간 기준)
+  let drinkCount=0;
+  days.forEach(d=>{
+    const lv=d.rec?normalizeDrink(d.rec.a):null;
+    if(lv===1||lv===2) drinkCount++;
+  });
 
   // 식사량 막대 (기록 없는 날은 비움, 전체 기간 날짜 위치 기준)
   let bars='<line x1="'+padL+'" y1="'+barBottom+'" x2="'+(W-padR)+'" y2="'+barBottom+'" stroke="#EEF0F6" stroke-width="1"/>';
