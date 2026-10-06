@@ -208,14 +208,14 @@
       <span class="cap">음주</span>
       <span><i class="sq" style="background:#C7392F"></i>과음</span>
       <span><i class="sq" style="background:#E6B03C"></i>마심</span>
-      <span><i class="sq" style="background:#A6DDB2"></i>안 마심</span>
+      <span><i class="sq" style="background:#C9EBD1"></i>안 마심</span>
       <span><i class="sq none"></i>미입력</span>
     </div>
     <div class="legend">
       <span class="cap">식사</span>
       <span><i class="sq" style="background:#C7392F"></i>과식</span>
       <span><i class="sq" style="background:#E6B03C"></i>보통</span>
-      <span><i class="sq" style="background:#A6DDB2"></i>소식</span>
+      <span><i class="sq" style="background:#C9EBD1"></i>소식</span>
       <span><i class="sq none"></i>미입력</span>
     </div>
   </div>
@@ -386,7 +386,7 @@ document.querySelectorAll("#seg button").forEach(b=>{
     b.classList.add("on"); period=+b.dataset.p; renderChart();
   };
 });
-const C_LO="#A6DDB2", C_MID="#E6B03C", C_HI="#C7392F", C_NONE="#E3E6EE";
+const C_LO="#C9EBD1", C_MID="#E6B03C", C_HI="#C7392F", C_NONE="#F4F5F9";
 const LV_COLOR=[C_LO,C_MID,C_HI];
 const FOOD_LV={"하":0,"중":1,"상":2};
 function drinkLv(rec){ return rec?normalizeDrink(rec.a):null; }
