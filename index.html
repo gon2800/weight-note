@@ -78,9 +78,9 @@
   .sum-tile .lab{font-size:11px;color:var(--sub);font-weight:700}
   .sum-tile .val{font-size:17px;font-weight:800;white-space:nowrap}
   .sum-tile .val small{font-size:11px;color:var(--sub);font-weight:700}
-  .wsum{position:relative;padding-top:26px}
+  .wsum{padding-top:14px}
   .wsum .sum3{margin-bottom:2px}
-  .wsum .per{position:absolute;top:10px;right:14px;font-size:10.5px;color:var(--sub);font-weight:600}
+  .card-title small{font-size:12px;font-weight:600;color:var(--sub);letter-spacing:-.2px}
   .chart-box{width:100%}
   .empty-msg{text-align:center;color:var(--sub);font-size:13px;padding:32px 0;font-weight:600}
 
@@ -97,7 +97,7 @@
   .hc.blank{visibility:hidden}
   .hc.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 
-  .legend{display:grid;grid-template-columns:32px repeat(4,64px);justify-content:start;align-items:center;margin-top:8px;
+  .legend{display:grid;grid-template-columns:28px repeat(4,54px);justify-content:center;align-items:center;margin-top:8px;
     font-size:11px;color:var(--sub);font-weight:600}
   .legend .cap{color:var(--ink);font-weight:800}
   .legend .sq{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px;vertical-align:-1px}
@@ -166,11 +166,10 @@
   </div>
 
   <div class="card wsum">
-    <div class="per" id="wPeriod">최근 1개월</div>
     <div class="sum3">
-      <div class="sum-tile"><span class="lab">현재</span><span class="val tabnum" id="wLast">–</span></div>
-      <div class="sum-tile"><span class="lab">첫 기록 대비</span><span class="val tabnum" id="wChange">–</span></div>
-      <div class="sum-tile"><span class="lab">기간 평균</span><span class="val tabnum" id="wAvg">–</span></div>
+      <div class="sum-tile"><span class="lab" id="wLabLast">현재</span><span class="val tabnum" id="wLast">–</span></div>
+      <div class="sum-tile"><span class="lab" id="wLabChange">1개월 간</span><span class="val tabnum" id="wChange">–</span></div>
+      <div class="sum-tile"><span class="lab" id="wLabAvg">1개월 평균</span><span class="val tabnum" id="wAvg">–</span></div>
     </div>
   </div>
 
@@ -203,10 +202,6 @@
 
   <div class="card">
     <div class="card-title" id="mixTitle">음주·식사</div>
-    <div class="sum2">
-      <div class="sum-tile"><span class="lab">음주</span><span class="val tabnum" id="dSum">–</span></div>
-      <div class="sum-tile"><span class="lab">식사 '상'</span><span class="val tabnum" id="fSum">–</span></div>
-    </div>
     <div class="chart-box" id="mixBox"></div>
     <div class="legend">
       <span class="cap">음주</span>
@@ -434,9 +429,10 @@ function renderChart(){
 }
 
 /* ----- 체중 카드 ----- */
-const PERIOD_LABEL={7:"최근 1주",31:"최근 1개월",183:"최근 6개월",365:"최근 1년"};
+const PERIOD_LABEL={7:"1주",31:"1개월",183:"6개월",365:"1년"};
 function renderWeight(days){
-  setText("wPeriod",PERIOD_LABEL[period]);
+  setText("wLabChange",PERIOD_LABEL[period]+" 간");
+  setText("wLabAvg",PERIOD_LABEL[period]+" 평균");
   const box=document.getElementById("weightBox");
   const pts=[];
   days.forEach((d,i)=>{ if(d.rec&&d.rec.w!=null) pts.push({i,w:d.rec.w,dt:d.dt}); });
@@ -512,6 +508,7 @@ function renderWeight(days){
 }
 
 /* ----- 음주·식사 카드 ----- */
+let secT={};
 function renderMix(days,from){
   const tk=todayKey();
   let anyRec=0,dDrink=0,dHeavy=0,fHi=0;
@@ -521,9 +518,8 @@ function renderMix(days,from){
     if(a!==null){ if(a>=1) dDrink++; if(a===2) dHeavy++; }
     if(f!==null){ if(f===2) fHi++; }
   });
-  setText("dSum",dDrink+'<small>일 (과음 '+dHeavy+'일)</small>');
-  setText("fSum",fHi+'<small>일</small>');
-  setText("mixTitle","음주·식사 (기록 "+anyRec+"일 / 경과 "+days.length+"일)");
+  secT={drink:{b:"음주 "+dDrink+"일",n:" (과음 "+dHeavy+"일)"},food:{b:"과식 "+fHi+"일",n:""}};
+  setText("mixTitle","음주·식사 <small>(기록 "+anyRec+"일 / 경과 "+days.length+"일)</small>");
 
   const box=document.getElementById("mixBox");
   if(period<=31) box.innerHTML=heatmapHTML(days,tk);
@@ -531,7 +527,8 @@ function renderMix(days,from){
 }
 
 function heatmapHTML(days,tk){
-  const build=(title,lvOf)=>{
+  const build=(t,lvOf)=>{
+    const title='<b>'+t.b+'</b>'+(t.n?'<span style="font-weight:600">'+t.n+'</span>':'');
     let cells="";
     for(let i=0;i<days[0].dt.getDay();i++) cells+='<div class="hc blank"></div>';
     days.forEach(d=>{
@@ -550,7 +547,7 @@ function heatmapHTML(days,tk){
       '<div class="hdow"><span style="color:#E9698A">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>'+
       '<div class="hgrid">'+cells+'</div></div>';
   };
-  return '<div class="hm-wrap">'+build("음주",drinkLv)+build("식사",foodLv)+'</div>';
+  return '<div class="hm-wrap">'+build(secT.drink,drinkLv)+build(secT.food,foodLv)+'</div>';
 }
 
 // 주별(6개월) / 월별(1년) 쌓인 막대. 아래부터 연녹→노랑→빨강, 남는 칸은 회색(미입력·미래)
@@ -585,11 +582,11 @@ function barsSVG(monthly,from){
   const nG=groups.length;
   const bw=(W-padL-padR-gapX*(nG-1))/nG;
   const barH=64, maxTotal=monthly?31:7;
-  const rows=[{title:"음주",lvOf:drinkLv,y0:18},{title:"식사",lvOf:foodLv,y0:106}];
+  const rows=[{t:secT.drink,lvOf:drinkLv,y0:18},{t:secT.food,lvOf:foodLv,y0:106}];
   const H=106+barH+28;
   let svg="";
   rows.forEach(row=>{
-    svg+='<text x="'+padL+'" y="'+(row.y0-6)+'" font-size="11" font-weight="800" fill="#1F2437">'+row.title+'</text>';
+    svg+='<text x="'+padL+'" y="'+(row.y0-6)+'" font-size="11" font-weight="800" fill="#1F2437">'+row.t.b+(row.t.n?'<tspan font-weight="600">'+row.t.n+'</tspan>':'')+'</text>';
     const base=row.y0+barH;
     groups.forEach((g,gi)=>{
       const cnt=[0,0,0];
