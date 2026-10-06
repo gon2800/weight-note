@@ -449,8 +449,8 @@ function renderWeight(days){
   setText("wChange",pts.length>1?((diff>0?"+":diff<0?"−":"")+fmt1(Math.abs(diff))+'<small> kg</small>'):"–");
   setText("wAvg",fmt1(avg)+'<small> kg</small>');
 
-  const W=340, H=200, padL=36, padR=10, iw=W-padL-padR;
-  const top=18, bottom=182, ih=bottom-top;
+  const W=340, H=125, padL=36, padR=10, iw=W-padL-padR;
+  const top=18, bottom=H-18, ih=bottom-top;
   const n=days.length;
   const x=i=> n===1?padL+iw/2:padL+iw*i/(n-1);
   const ws=pts.map(p=>p.w), mn=Math.min(...ws), mx=Math.max(...ws);
