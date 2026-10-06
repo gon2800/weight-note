@@ -444,35 +444,35 @@ function renderWeight(days){
           '<text x="'+padL+'" y="'+(yy-3).toFixed(1)+'" text-anchor="start" font-size="9.5" fill="#B7BCCD" font-weight="600">'+v.toFixed(1)+'</text>';
   });
 
-  // 부드러운 곡선: Catmull-Rom, 제어점 y를 두 점 사이로 제한해 출렁임(오버슈트) 방지.
-  // 4일 이상 비어 있는 구간은 점선, 그 너머 점은 기울기 계산에 쓰지 않는다.
+  // 부드러운 곡선: monotone cubic(Fritsch-Carlson). 실제 측정값을 그대로 잇고 값 사이에서 튀어나가지 않는다.
   const P=pts.map(p=>[x(p.i),y(p.w)]);
-  const gap=pts.map((p,j)=>j<pts.length-1 && pts[j+1].i-p.i>=4);
-  let solid="", dashed="";
-  for(let j=0;j<P.length-1;j++){
-    const p1=P[j], p2=P[j+1];
-    const p0=(j>0&&!gap[j-1])?P[j-1]:p1;
-    const p3=(j+2<P.length&&!gap[j+1])?P[j+2]:p2;
-    const ymin=Math.min(p1[1],p2[1]), ymax=Math.max(p1[1],p2[1]);
-    const cl=v=>Math.min(ymax,Math.max(ymin,v));
-    const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=cl(p1[1]+(p2[1]-p0[1])/6);
-    const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=cl(p2[1]-(p3[1]-p1[1])/6);
-    const seg="M"+p1[0].toFixed(1)+","+p1[1].toFixed(1)+"C"+c1x.toFixed(1)+","+c1y.toFixed(1)+" "+
-              c2x.toFixed(1)+","+c2y.toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
-    if(gap[j]) dashed+=seg; else solid+=seg;
+  const m=P.length;
+  const dx=[], sl=[];
+  for(let j=0;j<m-1;j++){ dx[j]=P[j+1][0]-P[j][0]; sl[j]=(P[j+1][1]-P[j][1])/dx[j]; }
+  const tg=[];
+  for(let j=0;j<m;j++){
+    if(j===0) tg[j]=m>1?sl[0]:0;
+    else if(j===m-1) tg[j]=sl[m-2];
+    else tg[j]=sl[j-1]*sl[j]<=0?0:(sl[j-1]+sl[j])/2;
   }
-  const line=(d,extra)=>d?'<path d="'+d+'" fill="none" stroke="#5B54E8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"'+extra+'/>':"";
+  for(let j=0;j<m-1;j++){
+    if(sl[j]===0){ tg[j]=0; tg[j+1]=0; continue; }
+    const aa=tg[j]/sl[j], bb=tg[j+1]/sl[j], s2=aa*aa+bb*bb;
+    if(s2>9){ const t=3/Math.sqrt(s2); tg[j]=t*aa*sl[j]; tg[j+1]=t*bb*sl[j]; }
+  }
+  let d="";
+  for(let j=0;j<m-1;j++){
+    const p1=P[j], p2=P[j+1], h=dx[j]/3;
+    d+=(j===0?"M"+p1[0].toFixed(1)+","+p1[1].toFixed(1):"")+"C"+(p1[0]+h).toFixed(1)+","+(p1[1]+tg[j]*h).toFixed(1)+" "+
+       (p2[0]-h).toFixed(1)+","+(p2[1]-tg[j+1]*h).toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
+  }
+  const line=d?'<path d="'+d+'" fill="none" stroke="#5B54E8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>':"";
 
-  const r=pts.length<=40?3.5:pts.length<=120?2.5:1.8;
   let dots="";
-  P.forEach((p,j)=>{
-    if(j===P.length-1) return;
-    dots+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+r+'" fill="#fff" stroke="#5B54E8" stroke-width="1.6"/>';
-  });
   const L=P[P.length-1];
   dots+='<circle cx="'+L[0].toFixed(1)+'" cy="'+L[1].toFixed(1)+'" r="6" fill="#5B54E8" stroke="#fff" stroke-width="2"/>';
   const lbx=Math.min(Math.max(L[0],padL+16),W-padR-16);
-  const lby=L[1]-12<14?L[1]+22:L[1]-13;
+  const lby=Math.max(L[1]-14,12);
   dots+='<text x="'+lbx.toFixed(1)+'" y="'+lby.toFixed(1)+'" text-anchor="middle" font-size="12" font-weight="800" fill="#5B54E8" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">'+fmt1(last.w)+'</text>';
 
   const idxs=n<=2?[0,n-1]:[0,Math.floor((n-1)/2),n-1];
@@ -484,7 +484,7 @@ function renderWeight(days){
   });
 
   box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">'+
-    grid+line(solid,"")+line(dashed,' stroke-dasharray="3 5"')+dots+xlab+'</svg>';
+    grid+line+dots+xlab+'</svg>';
 }
 
 /* ----- 음주·식사 카드 ----- */
