@@ -64,27 +64,41 @@
   .cell .w{font-size:10px;font-weight:800;color:var(--accent);margin-top:3px}
   .cell.today .w{color:#fff}
 
-  .stats-row{display:flex;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:12px 8px;margin-bottom:10px}
-  .stat-tile{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
-    border-left:1px solid var(--line)}
-  .stat-tile:first-child{border-left:none}
-  .stat-tile .lab{font-size:11px;color:var(--sub);font-weight:700}
-  .stat-tile .val{font-size:17px;font-weight:800}
-  .stat-tile .val small{font-size:11px;color:var(--sub);font-weight:700}
-
-  .seg{display:flex;background:transparent;border-radius:12px;padding:4px;gap:4px;margin-bottom:8px}
-  .seg button{flex:1;border:2px solid var(--line);background:var(--card);padding:8px 0;border-radius:9px;
+  .seg{display:flex;padding:0 0 0;gap:6px;margin:0 0 10px}
+  .seg button{flex:1;border:2px solid var(--line);background:var(--card);padding:9px 0;border-radius:12px;
     font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}
   .seg button.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+
+  .card-title{font-size:15px;font-weight:800;letter-spacing:-.3px;margin:2px 2px 10px}
+  .sum3,.sum2{display:flex;margin-bottom:10px}
+  .sum-tile{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+    border-left:1px solid var(--line);padding:0 2px}
+  .sum-tile:first-child{border-left:none}
+  .sum-tile .lab{font-size:11px;color:var(--sub);font-weight:700}
+  .sum-tile .val{font-size:17px;font-weight:800;white-space:nowrap}
+  .sum-tile .val small{font-size:11px;color:var(--sub);font-weight:700}
+  .sum-tile .sub{font-size:10.5px;color:var(--sub);font-weight:600;white-space:nowrap}
   .chart-box{width:100%}
   .empty-msg{text-align:center;color:var(--sub);font-size:13px;padding:32px 0;font-weight:600}
-  .legend{display:flex;gap:13px;justify-content:center;align-items:center;margin-top:8px;
+
+  .hm-wrap{display:flex;gap:12px}
+  .hm{flex:1;min-width:0}
+  .hm .cap{font-size:12px;font-weight:800;margin:0 0 5px 1px}
+  .hm .hdow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;
+    font-size:9px;font-weight:700;color:var(--sub);margin-bottom:3px}
+  .hm .hgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .hc{aspect-ratio:1/1;border-radius:4px;border:1px solid transparent;display:flex;align-items:center;
+    justify-content:center;font-size:8.5px;font-weight:700;color:rgba(31,36,55,.55);line-height:1;min-width:0}
+  .hc.none{background:#fff;border-color:#D5D8E3}
+  .hc.future{background:#EEF0F4;color:#B7BCCD}
+  .hc.blank{visibility:hidden}
+  .hc.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+
+  .legend{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:8px;
     font-size:11px;color:var(--sub);font-weight:600;flex-wrap:wrap}
   .legend .cap{color:var(--ink);font-weight:800}
-  .legend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
-  .legend .bar-i{width:6px;height:10px;border-radius:2px}
-  .legend .pct{color:var(--drink);font-weight:800}
+  .legend .sq{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px;vertical-align:-1px}
+  .legend .sq.none{background:#fff;border:1px solid #D5D8E3}
 
   .backdrop{position:fixed;inset:0;background:rgba(20,22,35,.4);opacity:0;pointer-events:none;
     transition:opacity .2s;z-index:20}
@@ -148,12 +162,6 @@
     <button class="iconbtn" id="menuBtn" aria-label="메뉴">⋯</button>
   </div>
 
-  <div class="stats-row">
-    <div class="stat-tile"><span class="lab">최근</span><span class="val tabnum" id="stLast">–</span></div>
-    <div class="stat-tile"><span class="lab">최저</span><span class="val tabnum" id="stMin">–</span></div>
-    <div class="stat-tile"><span class="lab">최고</span><span class="val tabnum" id="stMax">–</span></div>
-  </div>
-
   <div class="card">
     <div class="cal-head">
       <div class="cal-title" id="calTitle">2026 / 07</div>
@@ -169,20 +177,42 @@
     <div class="grid" id="grid"></div>
   </div>
 
+  <div class="seg" id="seg">
+    <button data-p="7">1주</button>
+    <button data-p="31" class="on">1개월</button>
+    <button data-p="183">6개월</button>
+    <button data-p="365">1년</button>
+  </div>
+
   <div class="card">
-    <div class="seg" id="seg">
-      <button data-p="7">1주</button>
-      <button data-p="31">1개월</button>
-      <button data-p="183">6개월</button>
-      <button data-p="365" class="on">1년</button>
+    <div class="card-title">체중</div>
+    <div class="sum3">
+      <div class="sum-tile"><span class="lab">최근</span><span class="val tabnum" id="wLast">–</span><span class="sub" id="wLastSub">&nbsp;</span></div>
+      <div class="sum-tile"><span class="lab">기간 변화</span><span class="val tabnum" id="wChange">–</span><span class="sub">첫 기록 대비</span></div>
+      <div class="sum-tile"><span class="lab">기간 평균</span><span class="val tabnum" id="wAvg">–</span><span class="sub" id="wAvgSub">&nbsp;</span></div>
     </div>
-    <div class="chart-box" id="chartBox"></div>
-    <div class="legend" id="legendDrink"></div>
+    <div class="chart-box" id="weightBox"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">음주 · 식사</div>
+    <div class="sum2">
+      <div class="sum-tile"><span class="lab">음주</span><span class="val tabnum" id="dSum">–</span><span class="sub tabnum" id="dSub">&nbsp;</span></div>
+      <div class="sum-tile"><span class="lab">식사 '상'</span><span class="val tabnum" id="fSum">–</span><span class="sub tabnum" id="fSub">&nbsp;</span></div>
+    </div>
+    <div class="chart-box" id="mixBox"></div>
     <div class="legend">
-      <span class="cap">식사량</span>
-      <span><i class="bar-i" style="background:var(--food-lo)"></i>하</span>
-      <span><i class="bar-i" style="background:var(--food-mid)"></i>중</span>
-      <span><i class="bar-i" style="background:var(--food-hi)"></i>상</span>
+      <span class="cap">음주</span>
+      <span><i class="sq" style="background:#A6DDB2"></i>안 마심</span>
+      <span><i class="sq" style="background:#E6B03C"></i>마심</span>
+      <span><i class="sq" style="background:#C7392F"></i>과음</span>
+    </div>
+    <div class="legend">
+      <span class="cap">식사</span>
+      <span><i class="sq" style="background:#A6DDB2"></i>하</span>
+      <span><i class="sq" style="background:#E6B03C"></i>중</span>
+      <span><i class="sq" style="background:#C7392F"></i>상</span>
+      <span><i class="sq none"></i>미입력</span>
     </div>
   </div>
 </div>
@@ -229,8 +259,6 @@
 
 <script>
 const KEY="weightNote.v1";
-const FOOD_COLOR={"상":"#E5484D","중":"#EAB308","하":"#3FB950"};
-const DRINK_COLOR={0:"#3FB950",1:"#EAB308",2:"#E5484D"};
 let data=load();
 let view=new Date(); view.setDate(1);
 let selKey=null, selRate=null, selDrink=null;
@@ -346,157 +374,220 @@ document.getElementById("delBtn").onclick=()=>{
 document.getElementById("backdrop").onclick=closeSheet;
 document.getElementById("wInput").addEventListener("click",()=>{ wDigits[0].focus(); });
 
-/* ---------- 그래프 ---------- */
-let period=365;
+/* ---------- 통계 (체중 카드 + 음주·식사 카드) ---------- */
+let period=31;
 document.querySelectorAll("#seg button").forEach(b=>{
   b.onclick=()=>{
     document.querySelectorAll("#seg button").forEach(x=>x.classList.remove("on"));
     b.classList.add("on"); period=+b.dataset.p; renderChart();
   };
 });
-function seriesForPeriod(){
-  const now=new Date(); now.setHours(0,0,0,0);
-  const from=new Date(now); from.setDate(from.getDate()-(period-1));
-  const days=[];
-  for(let dt=new Date(from); dt<=now; dt.setDate(dt.getDate()+1)){
-    const k=keyOf(dt.getFullYear(),dt.getMonth(),dt.getDate());
-    days.push({dt:new Date(dt), k, rec:data.entries[k]||null});
+const C_LO="#A6DDB2", C_MID="#E6B03C", C_HI="#C7392F", C_NONE="#E3E6EE";
+const LV_COLOR=[C_LO,C_MID,C_HI];
+const FOOD_LV={"하":0,"중":1,"상":2};
+function drinkLv(rec){ return rec?normalizeDrink(rec.a):null; }
+function foodLv(rec){ return (rec&&rec.f in FOOD_LV)?FOOD_LV[rec.f]:null; }
+function dayAt(base,off){ const d=new Date(base); d.setDate(d.getDate()+off); return d; }
+function todayDate(){ const t=new Date(); t.setHours(0,0,0,0); return t; }
+function keyOfDate(d){ return keyOf(d.getFullYear(),d.getMonth(),d.getDate()); }
+function setText(id,v){ document.getElementById(id).innerHTML=v; }
+
+// 선택 기간(오늘 기준 최근 N일)의 날짜 목록
+function windowDays(){
+  const now=todayDate(), out=[];
+  for(let i=period-1;i>=0;i--){
+    const dt=dayAt(now,-i), k=keyOfDate(dt);
+    out.push({dt,k,rec:data.entries[k]||null});
   }
-  // 기간과 무관하게 그래프 양쪽 끝을 항상 꽉 채우기 위해,
-  // 실제 기록이 있는 첫 날짜 ~ 마지막 날짜 구간만 사용한다.
-  const recIdxs=[];
-  days.forEach((d,i)=>{ if(d.rec) recIdxs.push(i); });
-  if(recIdxs.length===0) return [];
-  return days.slice(recIdxs[0], recIdxs[recIdxs.length-1]+1);
+  return out;
 }
+
 function renderChart(){
-  const days=seriesForPeriod();
-  const wPts=[];
-  days.forEach((d,i)=>{ if(d.rec && d.rec.w!=null) wPts.push({idx:i, w:d.rec.w}); });
-  const box=document.getElementById("chartBox");
-  const stLast=document.getElementById("stLast"),
-        stMin=document.getElementById("stMin"),
-        stMax=document.getElementById("stMax"),
-        legendDrink=document.getElementById("legendDrink");
-  if(days.length===0){
-    box.innerHTML='<div class="empty-msg">이 기간에 기록이 없어요.<br>날짜를 눌러 기록을 입력해 보세요.</div>';
-    stLast.textContent=stMin.textContent=stMax.textContent="–";
-    legendDrink.innerHTML=""; return;
-  }
-  const hasWeight=wPts.length>0;
-  const ws=wPts.map(p=>p.w);
-  const mn=hasWeight?Math.min(...ws):0, mx=hasWeight?Math.max(...ws):0, last=hasWeight?wPts[wPts.length-1].w:null;
-  if(hasWeight){
-    stLast.innerHTML=fmt1(last)+'<small> kg</small>';
-    stMin.innerHTML=fmt1(mn)+'<small> kg</small>';
-    stMax.innerHTML=fmt1(mx)+'<small> kg</small>';
-  }else{
-    stLast.textContent=stMin.textContent=stMax.textContent="–";
-  }
+  const days=windowDays();
+  renderWeight(days);
+  renderMix(days);
+}
 
-  const W=488, padL=8, padR=8, iw=W-padL-padR;
-  const lineTop=14, lineBottom=138, ih=lineBottom-lineTop;
-  const barBottom=194, barH=34, barTop=barBottom-barH;
-  const H=218;
+/* ----- 체중 카드 ----- */
+function renderWeight(days){
+  const box=document.getElementById("weightBox");
+  const pts=[];
+  days.forEach((d,i)=>{ if(d.rec&&d.rec.w!=null) pts.push({i,w:d.rec.w,dt:d.dt}); });
+  if(!pts.length){
+    ["wLast","wChange","wAvg"].forEach(id=>setText(id,"–"));
+    setText("wLastSub","&nbsp;"); setText("wAvgSub","&nbsp;");
+    box.innerHTML='<div class="empty-msg">이 기간에 체중 기록이 없어요.</div>';
+    return;
+  }
+  const first=pts[0], last=pts[pts.length-1];
+  const avg=pts.reduce((a,p)=>a+p.w,0)/pts.length;
+  const diff=Math.round((last.w-first.w)*10)/10;
+  setText("wLast",fmt1(last.w)+'<small> kg</small>');
+  setText("wLastSub",(last.dt.getMonth()+1)+"/"+last.dt.getDate());
+  setText("wChange",pts.length>1?((diff>0?"+":diff<0?"−":"")+fmt1(Math.abs(diff))+'<small> kg</small>'):"–");
+  setText("wAvg",fmt1(avg)+'<small> kg</small>');
+  setText("wAvgSub",pts.length+"회 기록");
+
+  const W=340, H=176, padL=10, padR=10, iw=W-padL-padR;
+  const top=22, bottom=148, ih=bottom-top;
   const n=days.length;
-  const x=i=> n===1 ? padL+iw/2 : padL + (iw*i/(n-1));
-  const weightedIdx=new Set(wPts.map(p=>p.idx));
+  const x=i=> n===1?padL+iw/2:padL+iw*i/(n-1);
+  const ws=pts.map(p=>p.w), mn=Math.min(...ws), mx=Math.max(...ws);
+  const padV=(mx-mn)*.2+.4, lo=mn-padV, hi=mx+padV;
+  const y=v=> top+ih*(1-(v-lo)/(hi-lo));
 
-  let grid="", dPath="", area="", dots="";
-  if(hasWeight){
-    const lo=mn-((mx-mn)*.25+.4), hi=mx+((mx-mn)*.25+.4);
-    const span=(hi-lo)||1;
-    const y=v=> lineTop + ih*(1-(v-lo)/span);
+  let grid="";
+  [mx,(mx+mn)/2,mn].forEach((v,gi,arr)=>{
+    if(gi>0 && mx===mn) return;
+    const yy=y(v);
+    grid+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#EEF0F6" stroke-width="1"/>'+
+          '<text x="'+padL+'" y="'+(yy-3).toFixed(1)+'" text-anchor="start" font-size="9.5" fill="#B7BCCD" font-weight="600">'+v.toFixed(1)+'</text>';
+  });
 
-    // gridlines
-    const gy=[mx,(mx+mn)/2,mn];
-    gy.forEach(v=>{
-      const yy=y(v).toFixed(1);
-      grid+='<line x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="#EEF0F6" stroke-width="1"/>';
-      grid+='<text x="'+(W-padR)+'" y="'+(yy-4)+'" text-anchor="end" font-size="10" fill="#B7BCCD" font-weight="600">'+v.toFixed(1)+'</text>';
-    });
-
-    // smooth line (기록된 체중이 있는 날짜만 연결, 위치는 전체 기간 기준)
-    const pts=wPts.map(p=>[x(p.idx),y(p.w)]);
-    dPath="M"+pts[0][0].toFixed(1)+","+pts[0][1].toFixed(1);
-    for(let i=0;i<pts.length-1;i++){
-      const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
-      const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6;
-      const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
-      dPath+="C"+c1x.toFixed(1)+","+c1y.toFixed(1)+" "+c2x.toFixed(1)+","+c2y.toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
-    }
-    area=dPath+" L"+pts[pts.length-1][0].toFixed(1)+","+lineBottom+" L"+pts[0][0].toFixed(1)+","+lineBottom+" Z";
-
-    // dots = 음주 여부 (체중 입력한 날만, 체중 없는 날은 아래쪽 보조 점으로 별도 표시)
-    wPts.forEach((p,i)=>{
-      const lv=normalizeDrink(days[p.idx].rec.a);
-      const r=(i===wPts.length-1)?7:6;
-      const fill=(lv!=null)?DRINK_COLOR[lv]:"#fff";
-      const stroke=(lv!=null)?"#fff":"#B9BED0";
-      dots+='<circle cx="'+x(p.idx).toFixed(1)+'" cy="'+y(p.w).toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>';
-    });
-    const lastIdx=wPts[wPts.length-1].idx;
-    const lx=x(lastIdx), ly=y(last);
-    const lbx=Math.min(Math.max(lx,padL+14), W-padR-14);
-    dots+='<text x="'+lbx.toFixed(1)+'" y="'+(ly-12).toFixed(1)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#5B54E8">'+fmt1(last)+'</text>';
+  // 부드러운 곡선: Catmull-Rom, 제어점 y를 두 점 사이로 제한해 출렁임(오버슈트) 방지.
+  // 4일 이상 비어 있는 구간은 점선, 그 너머 점은 기울기 계산에 쓰지 않는다.
+  const P=pts.map(p=>[x(p.i),y(p.w)]);
+  const gap=pts.map((p,j)=>j<pts.length-1 && pts[j+1].i-p.i>=4);
+  let solid="", dashed="";
+  for(let j=0;j<P.length-1;j++){
+    const p1=P[j], p2=P[j+1];
+    const p0=(j>0&&!gap[j-1])?P[j-1]:p1;
+    const p3=(j+2<P.length&&!gap[j+1])?P[j+2]:p2;
+    const ymin=Math.min(p1[1],p2[1]), ymax=Math.max(p1[1],p2[1]);
+    const cl=v=>Math.min(ymax,Math.max(ymin,v));
+    const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=cl(p1[1]+(p2[1]-p0[1])/6);
+    const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=cl(p2[1]-(p3[1]-p1[1])/6);
+    const seg="M"+p1[0].toFixed(1)+","+p1[1].toFixed(1)+"C"+c1x.toFixed(1)+","+c1y.toFixed(1)+" "+
+              c2x.toFixed(1)+","+c2y.toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
+    if(gap[j]) dashed+=seg; else solid+=seg;
   }
+  const line=(d,extra)=>d?'<path d="'+d+'" fill="none" stroke="#5B54E8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"'+extra+'/>':"";
 
-  // 체중 없이 음주만 기록된 날 (라인 위에 표시할 수 없으니 라인-막대 사이에 보조 점으로 표시)
-  days.forEach((d,i)=>{
-    if(weightedIdx.has(i)) return;
-    const lv=d.rec?normalizeDrink(d.rec.a):null;
-    if(lv==null) return;
-    dots+='<circle cx="'+x(i).toFixed(1)+'" cy="149" r="5" fill="'+DRINK_COLOR[lv]+'" stroke="#fff" stroke-width="1.5"/>';
+  const r=pts.length<=40?3.5:pts.length<=120?2.5:1.8;
+  let dots="";
+  P.forEach((p,j)=>{
+    if(j===P.length-1) return;
+    dots+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+r+'" fill="#fff" stroke="#5B54E8" stroke-width="1.6"/>';
   });
+  const L=P[P.length-1];
+  dots+='<circle cx="'+L[0].toFixed(1)+'" cy="'+L[1].toFixed(1)+'" r="6" fill="#5B54E8" stroke="#fff" stroke-width="2"/>';
+  const lbx=Math.min(Math.max(L[0],padL+16),W-padR-16);
+  const lby=L[1]-12<14?L[1]+22:L[1]-13;
+  dots+='<text x="'+lbx.toFixed(1)+'" y="'+lby.toFixed(1)+'" text-anchor="middle" font-size="12" font-weight="800" fill="#5B54E8" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">'+fmt1(last.w)+'</text>';
 
-  // 음주 전체 통계 (체중 입력 여부와 무관하게 전체 기간 기준)
-  let drinkCount=0;
-  days.forEach(d=>{
-    const lv=d.rec?normalizeDrink(d.rec.a):null;
-    if(lv===1||lv===2) drinkCount++;
-  });
-
-  // 식사량 막대 (기록 없는 날은 비움, 전체 기간 날짜 위치 기준)
-  let bars='<line x1="'+padL+'" y1="'+barBottom+'" x2="'+(W-padR)+'" y2="'+barBottom+'" stroke="#EEF0F6" stroke-width="1"/>';
-  const bw=Math.max(3, Math.min(14, (iw/n)*0.5));
-  days.forEach((d,i)=>{
-    const f=d.rec&&d.rec.f;
-    if(!f) return;
-    const level=f==="상"?3:(f==="중"?2:1);
-    const h=barH*level/3;
-    const bx=(x(i)-bw/2).toFixed(1);
-    const by=(barBottom-h).toFixed(1);
-    bars+='<rect x="'+bx+'" y="'+by+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="2" fill="'+FOOD_COLOR[f]+'"/>';
-  });
-
-  // x labels (전체 기간의 처음/중간/마지막 날짜)
   const idxs=n<=2?[0,n-1]:[0,Math.floor((n-1)/2),n-1];
   let xlab="";
   [...new Set(idxs)].forEach(i=>{
-    const dt=days[i].dt; const lab=(dt.getMonth()+1)+"/"+dt.getDate();
-    let anchor="middle"; if(i===0)anchor="start"; if(i===n-1)anchor="end";
-    xlab+='<text x="'+x(i).toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+anchor+'" font-size="10" fill="#B7BCCD" font-weight="600">'+lab+'</text>';
+    const dt=days[i].dt;
+    const anchor=i===0?"start":(i===n-1?"end":"middle");
+    xlab+='<text x="'+x(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="'+anchor+'" font-size="10" fill="#B7BCCD" font-weight="600">'+(dt.getMonth()+1)+"/"+dt.getDate()+'</text>';
   });
 
-  box.innerHTML=
-    '<svg viewBox="0 0 '+W+' '+H+'" width="100%" preserveAspectRatio="xMidYMid meet" style="display:block">'+
-      '<defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">'+
-        '<stop offset="0" stop-color="#5B54E8" stop-opacity=".16"/>'+
-        '<stop offset="1" stop-color="#5B54E8" stop-opacity="0"/>'+
-      '</linearGradient></defs>'+
-      grid+
-      '<path d="'+area+'" fill="url(#fill)"/>'+
-      '<path d="'+dPath+'" fill="none" stroke="#5B54E8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
-      dots+bars+xlab+
-    '</svg>';
+  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">'+
+    grid+line(solid,"")+line(dashed,' stroke-dasharray="3 5"')+dots+xlab+'</svg>';
+}
 
-  const pct=Math.round(drinkCount/n*100);
-  legendDrink.innerHTML=
-    '<span class="cap">음주</span>'+
-    '<span><i style="background:'+DRINK_COLOR[0]+'"></i>안 마심</span>'+
-    '<span><i style="background:'+DRINK_COLOR[1]+'"></i>마심</span>'+
-    '<span><i style="background:'+DRINK_COLOR[2]+'"></i>과음</span>'+
-    '<span class="pct">음주 '+drinkCount+'일 · '+pct+'%</span>';
+/* ----- 음주·식사 카드 ----- */
+function renderMix(days){
+  const tk=todayKey();
+  let dRec=0,dDrink=0,dHeavy=0,fRec=0,fHi=0;
+  days.forEach(d=>{
+    const a=drinkLv(d.rec), f=foodLv(d.rec);
+    if(a!==null){ dRec++; if(a>=1) dDrink++; if(a===2) dHeavy++; }
+    if(f!==null){ fRec++; if(f===2) fHi++; }
+  });
+  setText("dSum",dDrink+'<small>일</small>');
+  setText("dSub","과음 "+dHeavy+"일 · 기록 "+dRec+"일");
+  setText("fSum",fHi+'<small>일</small>');
+  setText("fSub","기록 "+fRec+"일");
+
+  const box=document.getElementById("mixBox");
+  if(period<=31) box.innerHTML=heatmapHTML(days,tk);
+  else box.innerHTML=barsSVG(period>183);
+}
+
+function heatmapHTML(days,tk){
+  const build=(title,lvOf)=>{
+    let cells="";
+    for(let i=0;i<days[0].dt.getDay();i++) cells+='<div class="hc blank"></div>';
+    days.forEach(d=>{
+      const lv=lvOf(d.rec);
+      const cls="hc"+(lv===null?" none":"")+(d.k===tk?" today":"");
+      const bg=lv===null?"":' style="background:'+LV_COLOR[lv]+'"';
+      cells+='<div class="'+cls+'"'+bg+'>'+d.dt.getDate()+'</div>';
+    });
+    // 마지막 주의 남은 칸 = 미래 날
+    let last=days[days.length-1].dt;
+    while(last.getDay()!==6){
+      last=dayAt(last,1);
+      cells+='<div class="hc future">'+last.getDate()+'</div>';
+    }
+    return '<div class="hm"><div class="cap">'+title+'</div>'+
+      '<div class="hdow"><span style="color:#E9698A">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>'+
+      '<div class="hgrid">'+cells+'</div></div>';
+  };
+  return '<div class="hm-wrap">'+build("음주",drinkLv)+build("식사",foodLv)+'</div>';
+}
+
+// 주별(6개월) / 월별(1년) 쌓인 막대. 아래부터 연녹→노랑→빨강, 남는 칸은 회색(미입력·미래)
+function barsSVG(monthly){
+  const now=todayDate();
+  const groups=[]; // {days:[Date...], total, label}
+  if(monthly){
+    for(let m=11;m>=0;m--){
+      const first=new Date(now.getFullYear(),now.getMonth()-m,1);
+      const cnt=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
+      const ds=[]; for(let d=0;d<cnt;d++) ds.push(dayAt(first,d));
+      groups.push({ds,total:cnt,label:(first.getMonth()+1)+"월"});
+    }
+  }else{
+    const start=dayAt(now,-(period-1));
+    let ws=dayAt(start,-start.getDay());
+    while(ws<=now){
+      const ds=[]; for(let d=0;d<7;d++) ds.push(dayAt(ws,d));
+      groups.push({ds,total:7,label:null});
+      ws=dayAt(ws,7);
+    }
+    // 월 표시: 월이 바뀌는 첫 주에만 (맨 앞 주는 바로 뒤에 라벨이 있으면 생략)
+    let prev=-1; const idx=[];
+    groups.forEach((g,i)=>{ const m=g.ds[0].getMonth(); if(m!==prev){ idx.push(i); prev=m; } });
+    if(idx.length>1 && idx[1]<3) idx.shift();
+    idx.forEach(i=>{ groups[i].label=(groups[i].ds[0].getMonth()+1)+"월"; });
+  }
+
+  const W=340, padL=4, padR=4, gapX=monthly?6:2.5;
+  const nG=groups.length;
+  const bw=(W-padL-padR-gapX*(nG-1))/nG;
+  const barH=64, maxTotal=monthly?31:7;
+  const rows=[{title:"음주",lvOf:drinkLv,y0:18},{title:"식사",lvOf:foodLv,y0:106}];
+  const H=106+barH+28;
+  let svg="";
+  rows.forEach(row=>{
+    svg+='<text x="'+padL+'" y="'+(row.y0-6)+'" font-size="11" font-weight="800" fill="#1F2437">'+row.title+'</text>';
+    const base=row.y0+barH;
+    groups.forEach((g,gi)=>{
+      const cnt=[0,0,0];
+      g.ds.forEach(dt=>{ if(dt<=now){ const lv=row.lvOf(data.entries[keyOfDate(dt)]||null); if(lv!==null) cnt[lv]++; } });
+      const unit=barH/maxTotal, bx=padL+gi*(bw+gapX);
+      const totalH=g.total*unit;
+      let yy=base;
+      // 회색 바탕(막대 전체 높이)
+      svg+='<rect x="'+bx.toFixed(1)+'" y="'+(base-totalH).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+totalH.toFixed(1)+'" rx="2" fill="'+C_NONE+'"/>';
+      cnt.forEach((c,lv)=>{
+        if(!c) return;
+        const h=c*unit; yy-=h;
+        svg+='<rect x="'+bx.toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+LV_COLOR[lv]+'"/>';
+      });
+    });
+  });
+  // x축(월)
+  groups.forEach((g,gi)=>{
+    if(!g.label) return;
+    const cx=padL+gi*(bw+gapX)+(monthly?bw/2:(gi>nG-4?bw:0));
+    const anchor=monthly?"middle":(gi>nG-4?"end":"start");
+    svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-8)+'" text-anchor="'+anchor+'" font-size="10" font-weight="600" fill="#9AA0B8">'+g.label+'</text>';
+  });
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">'+svg+'</svg>';
 }
 
 /* ---------- 네비게이션 ---------- */
