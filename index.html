@@ -59,6 +59,7 @@
   .cell:active{background:var(--bg)}
   .cell .d{font-size:12px;font-weight:600;color:var(--ink);line-height:1}
   .cell.sun .d{color:#E9698A}
+  .cell.has{background:#ECEBFD}
   .cell.today{background:var(--accent);}
   .cell.today .d{color:#fff}
   .cell .w{font-size:10px;font-weight:800;color:var(--accent);margin-top:3px}
@@ -94,8 +95,8 @@
   .hc.blank{visibility:hidden}
   .hc.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 
-  .legend{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:8px;
-    font-size:11px;color:var(--sub);font-weight:600;flex-wrap:wrap}
+  .legend{display:grid;grid-template-columns:32px repeat(4,64px);justify-content:start;align-items:center;margin-top:8px;
+    font-size:11px;color:var(--sub);font-weight:600}
   .legend .cap{color:var(--ink);font-weight:800}
   .legend .sq{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px;vertical-align:-1px}
   .legend .sq.none{background:#fff;border:1px solid #D5D8E3}
@@ -206,6 +207,7 @@
       <span><i class="sq" style="background:#A6DDB2"></i>안 마심</span>
       <span><i class="sq" style="background:#E6B03C"></i>마심</span>
       <span><i class="sq" style="background:#C7392F"></i>과음</span>
+      <span><i class="sq none"></i>미입력</span>
     </div>
     <div class="legend">
       <span class="cap">식사</span>
@@ -318,7 +320,7 @@ function renderCalendar(){
     const k=keyOf(y,m,d);
     const rec=data.entries[k];
     const cell=document.createElement("div");
-    cell.className="cell"+((first+d-1)%7===0?" sun":"")+(k===tk?" today":"");
+    cell.className="cell"+((first+d-1)%7===0?" sun":"")+(rec&&(rec.w!=null||rec.f||normalizeDrink(rec.a)!==null)?" has":"")+(k===tk?" today":"");
     let html='<div class="d">'+d+'</div>';
     if(rec&&rec.w!=null) html+='<div class="w tabnum">'+fmt1(rec.w)+'</div>';
     cell.innerHTML=html;
@@ -402,10 +404,27 @@ function windowDays(){
   return out;
 }
 
+// 6개월·1년: 첫 기록일이 선택 기간 시작일보다 늦으면 첫 기록일부터 표시
+function firstRecordDate(){
+  let min=null;
+  for(const k in data.entries){
+    const r=data.entries[k];
+    if(!r||(r.w==null&&!r.f&&normalizeDrink(r.a)===null)) continue;
+    if(min===null||k<min) min=k;
+  }
+  if(min===null) return null;
+  const [y,m,d]=min.split("-").map(Number);
+  return new Date(y,m-1,d);
+}
 function renderChart(){
-  const days=windowDays();
+  let days=windowDays(), from=null;
+  if(period>31){
+    from=firstRecordDate();
+    if(from) days=days.filter(d=>d.dt>=from);
+    if(!days.length) days=windowDays();
+  }
   renderWeight(days);
-  renderMix(days);
+  renderMix(days,from);
 }
 
 /* ----- 체중 카드 ----- */
@@ -488,7 +507,7 @@ function renderWeight(days){
 }
 
 /* ----- 음주·식사 카드 ----- */
-function renderMix(days){
+function renderMix(days,from){
   const tk=todayKey();
   let dRec=0,dDrink=0,dHeavy=0,fRec=0,fHi=0;
   days.forEach(d=>{
@@ -503,7 +522,7 @@ function renderMix(days){
 
   const box=document.getElementById("mixBox");
   if(period<=31) box.innerHTML=heatmapHTML(days,tk);
-  else box.innerHTML=barsSVG(period>183);
+  else box.innerHTML=barsSVG(period>183,from);
 }
 
 function heatmapHTML(days,tk){
@@ -530,7 +549,7 @@ function heatmapHTML(days,tk){
 }
 
 // 주별(6개월) / 월별(1년) 쌓인 막대. 아래부터 연녹→노랑→빨강, 남는 칸은 회색(미입력·미래)
-function barsSVG(monthly){
+function barsSVG(monthly,from){
   const now=todayDate();
   const groups=[]; // {days:[Date...], total, label}
   if(monthly){
@@ -540,8 +559,10 @@ function barsSVG(monthly){
       const ds=[]; for(let d=0;d<cnt;d++) ds.push(dayAt(first,d));
       groups.push({ds,total:cnt,label:(first.getMonth()+1)+"월"});
     }
+    if(from) while(groups.length>1 && groups[0].ds[groups[0].ds.length-1]<from) groups.shift();
   }else{
-    const start=dayAt(now,-(period-1));
+    let start=dayAt(now,-(period-1));
+    if(from && from>start) start=from;
     let ws=dayAt(start,-start.getDay());
     while(ws<=now){
       const ds=[]; for(let d=0;d<7;d++) ds.push(dayAt(ws,d));
@@ -583,8 +604,8 @@ function barsSVG(monthly){
   // x축(월)
   groups.forEach((g,gi)=>{
     if(!g.label) return;
-    const cx=padL+gi*(bw+gapX)+(monthly?bw/2:(gi>nG-4?bw:0));
-    const anchor=monthly?"middle":(gi>nG-4?"end":"start");
+    const cx=padL+gi*(bw+gapX)+(monthly?bw/2:(gi>0&&gi>nG-4?bw:0));
+    const anchor=monthly?"middle":(gi>0&&gi>nG-4?"end":"start");
     svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-8)+'" text-anchor="'+anchor+'" font-size="10" font-weight="600" fill="#9AA0B8">'+g.label+'</text>';
   });
   return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">'+svg+'</svg>';
