@@ -82,6 +82,7 @@
   .wsum .sum3{margin-bottom:2px}
   .card-title small{font-size:12px;font-weight:600;color:var(--sub);letter-spacing:-.2px}
   .chart-box{width:100%}
+  .wcard{padding-top:6px;padding-bottom:4px}
   .empty-msg{text-align:center;color:var(--sub);font-size:13px;padding:32px 0;font-weight:600}
 
   .hm-wrap{display:flex;gap:12px}
@@ -195,8 +196,8 @@
     <button data-p="365">1년</button>
   </div>
 
-  <div class="card">
-    <div class="card-title" style="margin-bottom:4px">체중</div>
+  <div class="card wcard">
+    <div class="card-title" style="margin-bottom:0">체중</div>
     <div class="chart-box" id="weightBox"></div>
   </div>
 
@@ -449,7 +450,7 @@ function renderWeight(days){
   setText("wAvg",fmt1(avg)+'<small> kg</small>');
 
   const W=340, H=200, padL=36, padR=10, iw=W-padL-padR;
-  const top=22, bottom=176, ih=bottom-top;
+  const top=18, bottom=182, ih=bottom-top;
   const n=days.length;
   const x=i=> n===1?padL+iw/2:padL+iw*i/(n-1);
   const ws=pts.map(p=>p.w), mn=Math.min(...ws), mx=Math.max(...ws);
