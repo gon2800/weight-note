@@ -212,9 +212,9 @@
     </div>
     <div class="legend">
       <span class="cap">식사</span>
-      <span><i class="sq" style="background:#C7392F"></i>상</span>
-      <span><i class="sq" style="background:#E6B03C"></i>중</span>
-      <span><i class="sq" style="background:#A6DDB2"></i>하</span>
+      <span><i class="sq" style="background:#C7392F"></i>과식</span>
+      <span><i class="sq" style="background:#E6B03C"></i>보통</span>
+      <span><i class="sq" style="background:#A6DDB2"></i>소식</span>
       <span><i class="sq none"></i>미입력</span>
     </div>
   </div>
@@ -448,20 +448,24 @@ function renderWeight(days){
   setText("wChange",pts.length>1?((diff>0?"+":diff<0?"−":"")+fmt1(Math.abs(diff))+'<small> kg</small>'):"–");
   setText("wAvg",fmt1(avg)+'<small> kg</small>');
 
-  const W=340, H=172, padL=10, padR=10, iw=W-padL-padR;
-  const top=18, bottom=144, ih=bottom-top;
+  const W=340, H=258, padL=36, padR=10, iw=W-padL-padR;
+  const top=22, bottom=230, ih=bottom-top;
   const n=days.length;
   const x=i=> n===1?padL+iw/2:padL+iw*i/(n-1);
   const ws=pts.map(p=>p.w), mn=Math.min(...ws), mx=Math.max(...ws);
-  const padV=(mx-mn)*.2+.4, lo=mn-padV, hi=mx+padV;
+  const lo=mn-.2, hi=mx+.2;
   const y=v=> top+ih*(1-(v-lo)/(hi-lo));
 
+  // 눈금: 0.5kg 단위로 3~4개 (범위가 넓으면 1kg 단위)
+  let step=.5, ticks=[];
+  const mk=()=>{ ticks=[]; for(let v=Math.ceil(lo/step)*step;v<=hi+1e-9;v+=step) ticks.push(Math.round(v*10)/10); };
+  mk(); if(ticks.length>4){ step=1; mk(); }
+  if(!ticks.length) ticks=[Math.round((mn+mx)/2*2)/2];
   let grid="";
-  [mx,(mx+mn)/2,mn].forEach((v,gi,arr)=>{
-    if(gi>0 && mx===mn) return;
+  ticks.forEach(v=>{
     const yy=y(v);
     grid+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#EEF0F6" stroke-width="1"/>'+
-          '<text x="'+padL+'" y="'+(yy-3).toFixed(1)+'" text-anchor="start" font-size="9.5" fill="#B7BCCD" font-weight="600">'+v.toFixed(1)+'</text>';
+          '<text x="'+(padL-6)+'" y="'+(yy+3.5).toFixed(1)+'" text-anchor="end" font-size="10" fill="#9AA0B8" font-weight="600">'+v.toFixed(1)+'</text>';
   });
 
   // 부드러운 곡선: monotone cubic(Fritsch-Carlson). 실제 측정값을 그대로 잇고 값 사이에서 튀어나가지 않는다.
@@ -473,7 +477,7 @@ function renderWeight(days){
   for(let j=0;j<m;j++){
     if(j===0) tg[j]=m>1?sl[0]:0;
     else if(j===m-1) tg[j]=sl[m-2];
-    else tg[j]=sl[j-1]*sl[j]<=0?0:(sl[j-1]+sl[j])/2;
+    else tg[j]=sl[j-1]*sl[j]<=0?0:3*(dx[j-1]+dx[j])/((2*dx[j]+dx[j-1])/sl[j-1]+(dx[j]+2*dx[j-1])/sl[j]);
   }
   for(let j=0;j<m-1;j++){
     if(sl[j]===0){ tg[j]=0; tg[j+1]=0; continue; }
@@ -483,8 +487,9 @@ function renderWeight(days){
   let d="";
   for(let j=0;j<m-1;j++){
     const p1=P[j], p2=P[j+1], h=dx[j]/3;
-    d+=(j===0?"M"+p1[0].toFixed(1)+","+p1[1].toFixed(1):"")+"C"+(p1[0]+h).toFixed(1)+","+(p1[1]+tg[j]*h).toFixed(1)+" "+
-       (p2[0]-h).toFixed(1)+","+(p2[1]-tg[j+1]*h).toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
+    const cy=v=>Math.min(Math.max(v,top),bottom);
+    d+=(j===0?"M"+p1[0].toFixed(1)+","+p1[1].toFixed(1):"")+"C"+(p1[0]+h).toFixed(1)+","+cy(p1[1]+tg[j]*h).toFixed(1)+" "+
+       (p2[0]-h).toFixed(1)+","+cy(p2[1]-tg[j+1]*h).toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
   }
   const line=d?'<path d="'+d+'" fill="none" stroke="#5B54E8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>':"";
 
@@ -511,14 +516,15 @@ function renderWeight(days){
 let secT={};
 function renderMix(days,from){
   const tk=todayKey();
-  let anyRec=0,dDrink=0,dHeavy=0,fHi=0;
+  let anyRec=0,dDrink=0,dIn=0,fHi=0,fIn=0;
   days.forEach(d=>{
     const a=drinkLv(d.rec), f=foodLv(d.rec);
     if(a!==null||f!==null) anyRec++;
-    if(a!==null){ if(a>=1) dDrink++; if(a===2) dHeavy++; }
-    if(f!==null){ if(f===2) fHi++; }
+    if(a!==null){ dIn++; if(a>=1) dDrink++; }
+    if(f!==null){ fIn++; if(f===2) fHi++; }
   });
-  secT={drink:{b:"음주 "+dDrink+"일",n:" (과음 "+dHeavy+"일)"},food:{b:"과식 "+fHi+"일",n:""}};
+  const pct=(c,t)=>" ("+(t?Math.round(c/t*100)+"%":"-")+")";
+  secT={drink:{b:"음주 "+dDrink+"일",n:pct(dDrink,dIn)},food:{b:"과식 "+fHi+"일",n:pct(fHi,fIn)}};
   setText("mixTitle","음주·식사 <small>(기록 "+anyRec+"일 / 경과 "+days.length+"일)</small>");
 
   const box=document.getElementById("mixBox");
@@ -580,7 +586,7 @@ function barsSVG(monthly,from){
 
   const W=340, padL=4, padR=4, gapX=monthly?6:2.5;
   const nG=groups.length;
-  const bw=(W-padL-padR-gapX*(nG-1))/nG;
+  const bwFit=(W-padL-padR-gapX*(nG-1))/nG, bw=Math.min(24,bwFit), capped=bwFit>24;
   const barH=64, maxTotal=monthly?31:7;
   const rows=[{t:secT.drink,lvOf:drinkLv,y0:18},{t:secT.food,lvOf:foodLv,y0:106}];
   const H=106+barH+28;
@@ -606,8 +612,8 @@ function barsSVG(monthly,from){
   // x축(월)
   groups.forEach((g,gi)=>{
     if(!g.label) return;
-    const cx=padL+gi*(bw+gapX)+(monthly?bw/2:(gi>0&&gi>nG-4?bw:0));
-    const anchor=monthly?"middle":(gi>0&&gi>nG-4?"end":"start");
+    const cx=padL+gi*(bw+gapX)+(monthly?bw/2:(!capped&&gi>0&&gi>nG-4?bw:0));
+    const anchor=monthly?"middle":(!capped&&gi>0&&gi>nG-4?"end":"start");
     svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-8)+'" text-anchor="'+anchor+'" font-size="10" font-weight="600" fill="#9AA0B8">'+g.label+'</text>';
   });
   return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">'+svg+'</svg>';
