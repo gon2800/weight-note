@@ -168,8 +168,8 @@
   <div class="card wsum">
     <div class="sum3">
       <div class="sum-tile"><span class="lab" id="wLabLast">현재</span><span class="val tabnum" id="wLast">–</span></div>
-      <div class="sum-tile"><span class="lab" id="wLabChange">1개월 간</span><span class="val tabnum" id="wChange">–</span></div>
       <div class="sum-tile"><span class="lab" id="wLabAvg">1개월 평균</span><span class="val tabnum" id="wAvg">–</span></div>
+      <div class="sum-tile"><span class="lab" id="wLabChange">1개월 간</span><span class="val tabnum" id="wChange">–</span></div>
     </div>
   </div>
 
@@ -196,7 +196,7 @@
   </div>
 
   <div class="card">
-    <div class="card-title">체중</div>
+    <div class="card-title" style="margin-bottom:4px">체중</div>
     <div class="chart-box" id="weightBox"></div>
   </div>
 
@@ -205,16 +205,16 @@
     <div class="chart-box" id="mixBox"></div>
     <div class="legend">
       <span class="cap">음주</span>
-      <span><i class="sq" style="background:#A6DDB2"></i>안 마심</span>
-      <span><i class="sq" style="background:#E6B03C"></i>마심</span>
       <span><i class="sq" style="background:#C7392F"></i>과음</span>
+      <span><i class="sq" style="background:#E6B03C"></i>마심</span>
+      <span><i class="sq" style="background:#A6DDB2"></i>안 마심</span>
       <span><i class="sq none"></i>미입력</span>
     </div>
     <div class="legend">
       <span class="cap">식사</span>
-      <span><i class="sq" style="background:#A6DDB2"></i>하</span>
-      <span><i class="sq" style="background:#E6B03C"></i>중</span>
       <span><i class="sq" style="background:#C7392F"></i>상</span>
+      <span><i class="sq" style="background:#E6B03C"></i>중</span>
+      <span><i class="sq" style="background:#A6DDB2"></i>하</span>
       <span><i class="sq none"></i>미입력</span>
     </div>
   </div>
@@ -448,8 +448,8 @@ function renderWeight(days){
   setText("wChange",pts.length>1?((diff>0?"+":diff<0?"−":"")+fmt1(Math.abs(diff))+'<small> kg</small>'):"–");
   setText("wAvg",fmt1(avg)+'<small> kg</small>');
 
-  const W=340, H=176, padL=10, padR=10, iw=W-padL-padR;
-  const top=22, bottom=148, ih=bottom-top;
+  const W=340, H=172, padL=10, padR=10, iw=W-padL-padR;
+  const top=18, bottom=144, ih=bottom-top;
   const n=days.length;
   const x=i=> n===1?padL+iw/2:padL+iw*i/(n-1);
   const ws=pts.map(p=>p.w), mn=Math.min(...ws), mx=Math.max(...ws);
