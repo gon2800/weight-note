@@ -448,8 +448,8 @@ function renderWeight(days){
   setText("wChange",pts.length>1?((diff>0?"+":diff<0?"−":"")+fmt1(Math.abs(diff))+'<small> kg</small>'):"–");
   setText("wAvg",fmt1(avg)+'<small> kg</small>');
 
-  const W=340, H=258, padL=36, padR=10, iw=W-padL-padR;
-  const top=22, bottom=230, ih=bottom-top;
+  const W=340, H=200, padL=36, padR=10, iw=W-padL-padR;
+  const top=22, bottom=176, ih=bottom-top;
   const n=days.length;
   const x=i=> n===1?padL+iw/2:padL+iw*i/(n-1);
   const ws=pts.map(p=>p.w), mn=Math.min(...ws), mx=Math.max(...ws);
@@ -505,7 +505,7 @@ function renderWeight(days){
   [...new Set(idxs)].forEach(i=>{
     const dt=days[i].dt;
     const anchor=i===0?"start":(i===n-1?"end":"middle");
-    xlab+='<text x="'+x(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="'+anchor+'" font-size="10" fill="#B7BCCD" font-weight="600">'+(dt.getMonth()+1)+"/"+dt.getDate()+'</text>';
+    xlab+='<text x="'+x(i).toFixed(1)+'" y="'+(H-3)+'" text-anchor="'+anchor+'" font-size="10" fill="#B7BCCD" font-weight="600">'+(dt.getMonth()+1)+"/"+dt.getDate()+'</text>';
   });
 
   box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">'+
