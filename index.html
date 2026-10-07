@@ -153,6 +153,17 @@
   .menu .mpanel button{display:block;width:100%;text-align:left;border:none;background:transparent;
     padding:12px 14px;font-size:14px;font-weight:600;color:var(--ink);border-radius:10px;cursor:pointer}
   .menu .mpanel button:active{background:var(--bg)}
+  .imp{max-height:92vh;overflow-y:auto}
+  .imp .hint{font-size:12px;color:var(--sub);line-height:1.5;margin:-6px 0 12px;text-align:center}
+  .imp textarea{width:100%;height:120px;border:2px solid transparent;background:var(--bg);border-radius:14px;
+    padding:12px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;color:var(--ink);resize:none;outline:none;margin-bottom:10px}
+  .imp textarea:focus{border-color:var(--accent)}
+  .imp .btn.alt{background:var(--bg);color:var(--ink);width:100%;flex:none;margin-bottom:14px}
+  .imp .pv{background:var(--bg);border-radius:14px;padding:12px 14px;margin-bottom:16px;font-size:14px;font-weight:700}
+  .imp .pv div{display:flex;justify-content:space-between;padding:3px 0}
+  .imp .pv .n{font-variant-numeric:tabular-nums}
+  .imp .pv .warn{font-size:12px;font-weight:600;color:var(--drink);display:block;padding-top:6px}
+  .imp .btn:disabled{opacity:.4;cursor:default}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -251,12 +262,29 @@
   </div>
 </div>
 
+<div class="backdrop" id="impBd"></div>
+<div class="sheet imp" id="impSheet">
+  <div class="handle"></div>
+  <div class="date-lab">옛 기록 가져오기</div>
+  <div class="hint">한 줄에 하나씩: 날짜,체중,음주<br>예) 2025-07-03,88.6,1 (음주 1 = 마심, 비우면 기록 안 함)</div>
+  <textarea id="impText" placeholder="date,weight,drink&#10;2025-07-03,88.6,1" spellcheck="false"></textarea>
+  <button class="btn alt" id="impFileBtn">CSV 파일 선택</button>
+  <div class="pv" id="impPv"></div>
+  <div class="actions">
+    <button class="btn del" id="impCancel" style="color:var(--ink)">닫기</button>
+    <button class="btn save" id="impGo" disabled>가져오기</button>
+  </div>
+</div>
+<input type="file" id="csvFile" accept=".csv,text/csv,text/plain" style="display:none">
+
 <div class="menu" id="menu">
   <div class="mbd"></div>
   <div class="mpanel">
     <button id="installBtn" style="display:none">홈 화면에 추가</button>
     <button id="exportBtn">데이터 백업 (내보내기)</button>
     <button id="importBtn">데이터 복원 (불러오기)</button>
+    <button id="csvBtn">옛 기록 가져오기</button>
+    <button id="undoImpBtn">가져오기 되돌리기</button>
   </div>
 </div>
 <input type="file" id="fileInput" accept="application/json" style="display:none">
@@ -654,6 +682,90 @@ document.getElementById("fileInput").onchange=e=>{
   };
   r.readAsText(f); e.target.value="";
 };
+
+/* ---------- 옛 기록 가져오기 (CSV) ---------- */
+const BACKUP_KEY="weightNote.v1.importBackup";
+const impText=document.getElementById("impText");
+function parseCsv(text){
+  const rows=[], seen=new Set(); let bad=0;
+  text.replace(/^\uFEFF/,"").split(/\r?\n/).forEach((line,i)=>{
+    line=line.trim(); if(!line) return;
+    const c=line.split(",").map(x=>x.trim());
+    if(i===0 && /^date$/i.test(c[0])) return; // 머리글 줄
+    const m=/^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(c[0]);
+    if(!m){ bad++; return; }
+    const dt=new Date(+m[1],+m[2]-1,+m[3]);
+    if(dt.getFullYear()!==+m[1]||dt.getMonth()!==+m[2]-1||dt.getDate()!==+m[3]){ bad++; return; }
+    const k=keyOf(+m[1],+m[2]-1,+m[3]);
+    let w=null;
+    if(c[1]){ w=parseFloat(c[1]); if(!isFinite(w)||w<20||w>300||!/^\d+(\.\d+)?$/.test(c[1])){ bad++; return; } w=Math.round(w*10)/10; }
+    const a=(c[2]==="1")?1:null;
+    if(w===null&&a===null){ bad++; return; }
+    if(seen.has(k)){ bad++; return; }
+    seen.add(k);
+    const rec={}; if(w!==null) rec.w=w; if(a!==null) rec.a=a;
+    rows.push({k,rec});
+  });
+  return {rows,bad};
+}
+function impPlan(){
+  const {rows,bad}=parseCsv(impText.value);
+  const add=rows.filter(r=>!data.entries[r.k]);
+  return {total:rows.length,add,skip:rows.length-add.length,bad};
+}
+function impRender(){
+  const p=impPlan();
+  document.getElementById("impPv").innerHTML=
+    '<div><span>전체</span><span class="n">'+p.total+'건</span></div>'+
+    '<div><span>새로 추가</span><span class="n">'+p.add.length+'건</span></div>'+
+    '<div><span>이미 있는 날짜라 건너뜀</span><span class="n">'+p.skip+'건</span></div>'+
+    (p.bad?'<span class="warn">읽지 못한 줄 '+p.bad+'개는 제외했어요</span>':'');
+  document.getElementById("impGo").disabled=p.add.length===0;
+}
+function openImport(){
+  menu.classList.remove("show");
+  impText.value=""; impRender();
+  document.getElementById("impBd").classList.add("show");
+  document.getElementById("impSheet").classList.add("show");
+}
+function closeImport(){
+  document.getElementById("impBd").classList.remove("show");
+  document.getElementById("impSheet").classList.remove("show");
+}
+document.getElementById("csvBtn").onclick=openImport;
+document.getElementById("impBd").onclick=closeImport;
+document.getElementById("impCancel").onclick=closeImport;
+impText.addEventListener("input",impRender);
+document.getElementById("impFileBtn").onclick=()=>document.getElementById("csvFile").click();
+document.getElementById("csvFile").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ impText.value=r.result; impRender(); };
+  r.onerror=()=>alert("파일을 읽을 수 없어요.");
+  r.readAsText(f); e.target.value="";
+};
+document.getElementById("impGo").onclick=()=>{
+  const p=impPlan(); if(!p.add.length) return;
+  // 현재 저장소 내용을 통째로 백업한 뒤에 추가한다
+  localStorage.setItem(BACKUP_KEY,JSON.stringify({at:new Date().toISOString(),raw:localStorage.getItem(KEY)}));
+  p.add.forEach(r=>{ if(!data.entries[r.k]) data.entries[r.k]=r.rec; }); // 기존 날짜는 절대 덮어쓰지 않음
+  save(); renderCalendar(); renderChart(); closeImport();
+  alert(p.add.length+"건을 추가했어요. (건너뜀 "+p.skip+"건)\n마음에 안 들면 ⋯ 메뉴의 '가져오기 되돌리기'를 누르세요.");
+};
+function paintUndo(){
+  document.getElementById("undoImpBtn").style.opacity=localStorage.getItem(BACKUP_KEY)?"1":".4";
+}
+document.getElementById("undoImpBtn").onclick=()=>{
+  menu.classList.remove("show");
+  let b=null; try{ b=JSON.parse(localStorage.getItem(BACKUP_KEY)); }catch(e){}
+  if(!b){ alert("되돌릴 가져오기 기록이 없어요."); return; }
+  if(!confirm("마지막 가져오기 직전 상태로 되돌릴까요?\n그 뒤에 입력한 기록도 함께 사라지고, 되돌리기는 한 번만 할 수 있어요.")) return;
+  if(b.raw===null) localStorage.removeItem(KEY); else localStorage.setItem(KEY,b.raw);
+  localStorage.removeItem(BACKUP_KEY);
+  data=load(); renderCalendar(); renderChart();
+  alert("가져오기 전 상태로 되돌렸어요.");
+};
+document.getElementById("menuBtn").addEventListener("click",paintUndo);
 
 /* ---------- 서비스워커 등록 (오프라인 + 앱 설치) ---------- */
 if("serviceWorker" in navigator){
