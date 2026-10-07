@@ -197,7 +197,7 @@
   </div>
 
   <div class="card wcard">
-    <div class="card-title" style="margin-bottom:0">체중</div>
+    <div class="card-title" style="margin-bottom:0;display:flex;justify-content:space-between;align-items:baseline">체중<span id="wTitleLast" style="font-size:13px;font-weight:800;color:#5B54E8"></span></div>
     <div class="chart-box" id="weightBox"></div>
   </div>
 
@@ -442,7 +442,7 @@ function renderWeight(days){
   const pts=[];
   days.forEach((d,i)=>{ if(d.rec&&d.rec.w!=null) pts.push({i,w:d.rec.w,dt:d.dt}); });
   if(!pts.length){
-    ["wLast","wChange","wAvg"].forEach(id=>setText(id,"–"));
+    ["wLast","wChange","wAvg"].forEach(id=>setText(id,"–")); setText("wTitleLast","");
     box.innerHTML='<div class="empty-msg">이 기간에 체중 기록이 없어요.</div>';
     return;
   }
@@ -450,10 +450,11 @@ function renderWeight(days){
   const avg=pts.reduce((a,p)=>a+p.w,0)/pts.length;
   const diff=Math.round((last.w-first.w)*10)/10;
   setText("wLast",fmt1(last.w)+'<small> kg</small>');
+  setText("wTitleLast",fmt1(last.w)+" kg");
   setText("wChange",pts.length>1?((diff>0?"+":diff<0?"−":"")+fmt1(Math.abs(diff))+'<small> kg</small>'):"–");
   setText("wAvg",fmt1(avg)+'<small> kg</small>');
 
-  const W=340, H=125, padL=36, padR=44, iw=W-padL-padR;
+  const W=340, H=125, padL=36, padR=10, iw=W-padL-padR;
   const top=20, bottom=H-22, ih=bottom-top;
   const n=days.length;
   const x=i=> n===1?padL+iw/2:padL+iw*i/(n-1);
@@ -501,7 +502,6 @@ function renderWeight(days){
   let dots="";
   const L=P[P.length-1];
   dots+='<circle cx="'+L[0].toFixed(1)+'" cy="'+L[1].toFixed(1)+'" r="6" fill="#5B54E8" stroke="#fff" stroke-width="2"/>';
-  dots+='<text x="'+(L[0]+10).toFixed(1)+'" y="'+(L[1]+4.2).toFixed(1)+'" text-anchor="start" font-size="12" font-weight="800" fill="#5B54E8" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">'+fmt1(last.w)+'</text>';
 
   const idxs=n<=2?[0,n-1]:[0,Math.floor((n-1)/2),n-1];
   let xlab="";
