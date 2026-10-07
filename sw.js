@@ -1,4 +1,4 @@
-const CACHE="weight-note-v23";
+const CACHE="weight-note-v24";
 // Pretendard 글꼴(CDN)은 버전이 바뀌어도 다시 받지 않도록 별도 캐시에 보관한다.
 const FONT_CACHE="weight-note-fonts-v1";
 const FONT_HOST="https://cdn.jsdelivr.net";
