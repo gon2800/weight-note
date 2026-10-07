@@ -193,7 +193,7 @@
     <button data-p="7">1주</button>
     <button data-p="31" class="on">1개월</button>
     <button data-p="183">6개월</button>
-    <button data-p="365">1년</button>
+    <button data-p="0">전체</button>
   </div>
 
   <div class="card wcard">
@@ -399,14 +399,19 @@ function setText(id,v){ document.getElementById(id).innerHTML=v; }
 // 선택 기간(오늘 기준 최근 N일)의 날짜 목록
 function windowDays(){
   const now=todayDate(), out=[];
-  for(let i=period-1;i>=0;i--){
+  let len=period;
+  if(period===0){ // 전체: 첫 기록일부터 오늘까지
+    const f=firstRecordDate();
+    len=f?Math.round((now-f)/864e5)+1:31;
+  }
+  for(let i=len-1;i>=0;i--){
     const dt=dayAt(now,-i), k=keyOfDate(dt);
     out.push({dt,k,rec:data.entries[k]||null});
   }
   return out;
 }
 
-// 6개월·1년: 첫 기록일이 선택 기간 시작일보다 늦으면 첫 기록일부터 표시
+// 6개월: 첫 기록일이 선택 기간 시작일보다 늦으면 첫 기록일부터 표시
 function firstRecordDate(){
   let min=null;
   for(const k in data.entries){
@@ -419,18 +424,17 @@ function firstRecordDate(){
   return new Date(y,m-1,d);
 }
 function renderChart(){
-  let days=windowDays(), from=null;
+  let days=windowDays();
   if(period>31){
-    from=firstRecordDate();
-    if(from) days=days.filter(d=>d.dt>=from);
-    if(!days.length) days=windowDays();
+    const from=firstRecordDate();
+    if(from){ const f=days.filter(d=>d.dt>=from); if(f.length) days=f; }
   }
   renderWeight(days);
-  renderMix(days,from);
+  renderMix(days);
 }
 
 /* ----- 체중 카드 ----- */
-const PERIOD_LABEL={7:"1주",31:"1개월",183:"6개월",365:"1년"};
+const PERIOD_LABEL={7:"1주",31:"1개월",183:"6개월",0:"전체"};
 function renderWeight(days){
   setText("wLabChange",PERIOD_LABEL[period]+" 간");
   setText("wLabAvg",PERIOD_LABEL[period]+" 평균");
@@ -449,18 +453,18 @@ function renderWeight(days){
   setText("wChange",pts.length>1?((diff>0?"+":diff<0?"−":"")+fmt1(Math.abs(diff))+'<small> kg</small>'):"–");
   setText("wAvg",fmt1(avg)+'<small> kg</small>');
 
-  const W=340, H=125, padL=36, padR=10, iw=W-padL-padR;
-  const top=18, bottom=H-18, ih=bottom-top;
+  const W=340, H=125, padL=36, padR=44, iw=W-padL-padR;
+  const top=20, bottom=H-22, ih=bottom-top;
   const n=days.length;
   const x=i=> n===1?padL+iw/2:padL+iw*i/(n-1);
   const ws=pts.map(p=>p.w), mn=Math.min(...ws), mx=Math.max(...ws);
-  const lo=mn-.2, hi=mx+.2;
+  const pad=Math.max(.2,(mx-mn)*.1), lo=mn-pad, hi=mx+pad;
   const y=v=> top+ih*(1-(v-lo)/(hi-lo));
 
   // 눈금: 0.5kg 단위로 3~4개 (범위가 넓으면 1kg 단위)
   let step=.5, ticks=[];
   const mk=()=>{ ticks=[]; for(let v=Math.ceil(lo/step)*step;v<=hi+1e-9;v+=step) ticks.push(Math.round(v*10)/10); };
-  mk(); if(ticks.length>4){ step=1; mk(); }
+  mk(); for(const st of [1,2,5,10]) if(ticks.length>4){ step=st; mk(); }
   if(!ticks.length) ticks=[Math.round((mn+mx)/2*2)/2];
   let grid="";
   ticks.forEach(v=>{
@@ -497,9 +501,7 @@ function renderWeight(days){
   let dots="";
   const L=P[P.length-1];
   dots+='<circle cx="'+L[0].toFixed(1)+'" cy="'+L[1].toFixed(1)+'" r="6" fill="#5B54E8" stroke="#fff" stroke-width="2"/>';
-  const lbx=Math.min(Math.max(L[0],padL+16),W-padR-16);
-  const lby=Math.max(L[1]-14,12);
-  dots+='<text x="'+lbx.toFixed(1)+'" y="'+lby.toFixed(1)+'" text-anchor="middle" font-size="12" font-weight="800" fill="#5B54E8" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">'+fmt1(last.w)+'</text>';
+  dots+='<text x="'+(L[0]+10).toFixed(1)+'" y="'+(L[1]+4.2).toFixed(1)+'" text-anchor="start" font-size="12" font-weight="800" fill="#5B54E8" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">'+fmt1(last.w)+'</text>';
 
   const idxs=n<=2?[0,n-1]:[0,Math.floor((n-1)/2),n-1];
   let xlab="";
@@ -515,7 +517,7 @@ function renderWeight(days){
 
 /* ----- 음주·식사 카드 ----- */
 let secT={};
-function renderMix(days,from){
+function renderMix(days){
   const tk=todayKey();
   let anyRec=0,dDrink=0,dIn=0,fHi=0,fIn=0;
   days.forEach(d=>{
@@ -529,8 +531,8 @@ function renderMix(days,from){
   setText("mixTitle","음주·식사 <small>(기록 "+anyRec+"일 / 경과 "+days.length+"일)</small>");
 
   const box=document.getElementById("mixBox");
-  if(period<=31) box.innerHTML=heatmapHTML(days,tk);
-  else box.innerHTML=barsSVG(period>183,from);
+  if(period>0&&period<=31) box.innerHTML=heatmapHTML(days,tk);
+  else box.innerHTML=barsSVG(days.length>183,days[0].dt);
 }
 
 function heatmapHTML(days,tk){
@@ -557,22 +559,20 @@ function heatmapHTML(days,tk){
   return '<div class="hm-wrap">'+build(secT.drink,drinkLv)+build(secT.food,foodLv)+'</div>';
 }
 
-// 주별(6개월) / 월별(1년) 쌓인 막대. 아래부터 연녹→노랑→빨강, 남는 칸은 회색(미입력·미래)
+// 주별(6개월 이하) / 월별(6개월 초과) 쌓인 막대. 아래부터 연녹→노랑→빨강, 남는 칸은 회색(미입력·미래)
 function barsSVG(monthly,from){
   const now=todayDate();
   const groups=[]; // {days:[Date...], total, label}
   if(monthly){
-    for(let m=11;m>=0;m--){
+    const nM=(now.getFullYear()-from.getFullYear())*12+now.getMonth()-from.getMonth();
+    for(let m=nM;m>=0;m--){
       const first=new Date(now.getFullYear(),now.getMonth()-m,1);
       const cnt=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
       const ds=[]; for(let d=0;d<cnt;d++) ds.push(dayAt(first,d));
       groups.push({ds,total:cnt,label:(first.getMonth()+1)+"월"});
     }
-    if(from) while(groups.length>1 && groups[0].ds[groups[0].ds.length-1]<from) groups.shift();
   }else{
-    let start=dayAt(now,-(period-1));
-    if(from && from>start) start=from;
-    let ws=dayAt(start,-start.getDay());
+    let ws=dayAt(from,-from.getDay());
     while(ws<=now){
       const ds=[]; for(let d=0;d<7;d++) ds.push(dayAt(ws,d));
       groups.push({ds,total:7,label:null});
@@ -613,6 +613,7 @@ function barsSVG(monthly,from){
   // x축(월)
   groups.forEach((g,gi)=>{
     if(!g.label) return;
+    if(monthly && nG>12 && (nG-1-gi)%Math.ceil(nG/12)) return;
     const cx=padL+gi*(bw+gapX)+(monthly?bw/2:(!capped&&gi>0&&gi>nG-4?bw:0));
     const anchor=monthly?"middle":(!capped&&gi>0&&gi>nG-4?"end":"start");
     svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-8)+'" text-anchor="'+anchor+'" font-size="10" font-weight="600" fill="#9AA0B8">'+g.label+'</text>';
