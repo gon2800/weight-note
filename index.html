@@ -201,6 +201,19 @@
   .imp .pv .n{font-variant-numeric:tabular-nums}
   .imp .pv .warn{font-size:var(--fs-xs);font-weight:500;color:var(--drink);display:block;padding-top:6px}
   .imp .btn:disabled{opacity:.4;cursor:default}
+  .field-lab .dgray{font-size:var(--fs-xs);font-weight:500;color:#A4A9BD;margin-left:4px}
+  .menu .mpanel button .msub{display:block;font-size:var(--fs-xs);font-weight:500;color:var(--sub);margin-top:2px}
+  .menu .mpanel button:disabled{opacity:.5;cursor:default}
+  .dlg{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:var(--sp-3);background:rgba(20,22,35,.45)}
+  .dlg.show{display:flex}
+  .dlg .box{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:var(--sp-3) var(--sp-2) var(--sp-2);width:100%;max-width:340px}
+  .dlg h2{font-size:var(--fs-md);font-weight:800;margin:0 0 6px;text-align:center;letter-spacing:-.3px}
+  .dlg p{font-size:var(--fs-sm);color:var(--sub);line-height:1.5;margin:0 0 var(--sp-2);text-align:center}
+  .dlg .opt{display:block;width:100%;border:2px solid var(--line);background:var(--card);border-radius:14px;padding:14px 12px;
+    font-size:var(--fs-sm);font-weight:800;color:var(--ink);cursor:pointer;margin-bottom:var(--sp-1);text-align:center}
+  .dlg .opt small{display:block;font-size:var(--fs-xs);font-weight:500;color:var(--sub);margin-top:3px}
+  .dlg .opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .dlg .close{display:block;width:100%;border:none;background:transparent;color:var(--sub);font-size:var(--fs-sm);font-weight:600;padding:10px 0 2px;cursor:pointer}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -283,13 +296,13 @@
     <input id="wD3" class="wdigit" type="tel" inputmode="numeric" maxlength="1" placeholder="0" aria-label="체중 소수 자리">
     <span class="kg-lab">kg</span>
   </div>
-  <div class="field-lab">어제의 식사량</div>
+  <div class="field-lab" id="labFood">어제의 식사량</div>
   <div class="rate" id="rate">
     <button data-v="하"><span class="rdot" style="background:var(--food-lo)"></span>하</button>
     <button data-v="중"><span class="rdot" style="background:var(--food-mid)"></span>중</button>
     <button data-v="상"><span class="rdot" style="background:var(--food-hi)"></span>상</button>
   </div>
-  <div class="field-lab">음주 여부</div>
+  <div class="field-lab" id="labDrink">음주 여부</div>
   <div class="drink" id="drink">
     <button data-a="0">안 마심</button>
     <button data-a="1">마심</button>
@@ -316,6 +329,29 @@
 </div>
 <input type="file" id="csvFile" accept=".csv,text/csv,text/plain" style="display:none">
 
+<div class="backdrop" id="shBd"></div>
+<div class="sheet imp" id="shSheet">
+  <div class="handle"></div>
+  <div class="date-lab">기존 기록 하루 앞으로 옮기기</div>
+  <div class="hint" id="shHint"></div>
+  <div class="pv" id="shPv"></div>
+  <div class="actions">
+    <button class="btn del" id="shCancel" style="color:var(--ink)">닫기</button>
+    <button class="btn save" id="shGo" disabled>옮기기</button>
+  </div>
+</div>
+
+<div class="dlg" id="basisDlg">
+  <div class="box">
+    <h2>음주·식사는 언제 기록하나요?</h2>
+    <p>체중은 항상 입력한 날짜로 저장돼요.<br>음주·식사를 적는 날짜만 달라져요.</p>
+    <button class="opt" data-b="morning">다음 날 아침에 기록 (어제 것)<small>10/7에 입력하면 음주·식사는 10/6에 저장</small></button>
+    <button class="opt" data-b="night">그날 밤에 기록 (오늘 것)<small>입력한 날짜에 그대로 저장</small></button>
+    <p id="basisNote" style="margin:var(--sp-1) 0 0;font-size:var(--fs-xs)">‘다음 날 아침’을 고르면, 이미 쌓인 기록은 ⋯ 메뉴의 ‘하루 앞으로 옮기기’로 한 번 옮겨 주세요.</p>
+    <button class="close" id="basisClose">닫기</button>
+  </div>
+</div>
+
 <div class="menu" id="menu">
   <div class="mbd"></div>
   <div class="mpanel">
@@ -324,7 +360,10 @@
     <button id="importBtn">데이터 복원 (불러오기)</button>
     <button id="csvBtn">옛 기록 가져오기</button>
     <button id="undoImpBtn">가져오기 되돌리기</button>
-    <div class="ver">v1.0</div>
+    <button id="basisBtn">음주·식사 기록 기준<span class="msub" id="basisSub"></span></button>
+    <button id="shiftBtn">기존 음주·식사 기록 하루 앞으로 옮기기</button>
+    <button id="shiftUndoBtn">옮기기 되돌리기</button>
+    <div class="ver">v1.0.1</div>
   </div>
 </div>
 <input type="file" id="fileInput" accept="application/json" style="display:none">
@@ -333,7 +372,16 @@
 const KEY="weightNote.v1";
 let data=load();
 let view=new Date(); view.setDate(1);
-let selKey=null, selRate=null, selDrink=null;
+let selKey=null, selAKey=null, selRate=null, selDrink=null;
+const BASIS_KEY="weightNote.drinkBasis"; // "morning"(다음 날 아침, 어제 것) | "night"(그날 밤)
+function basis(){ return localStorage.getItem(BASIS_KEY)==="morning"?"morning":"night"; }
+function prevKey(k){ return keyOfDate(dayAt(insParse(k),-1)); }
+// 기록 한 칸의 필드를 고쳐 쓴다(null이면 지움). 다 비면 그날 기록을 없앤다. 다른 필드는 그대로 둔다.
+function patchEntry(k,patch){
+  const e=Object.assign({},data.entries[k]);
+  for(const f in patch){ if(patch[f]===null) delete e[f]; else e[f]=patch[f]; }
+  if(Object.keys(e).length) data.entries[k]=e; else delete data.entries[k];
+}
 
 function fmt1(n){ return (Math.round(n*10)/10).toFixed(1); }
 function normalizeDrink(a){
@@ -404,13 +452,23 @@ function openSheet(k){
   selKey=k;
   const [y,m,d]=k.split("-").map(Number);
   document.getElementById("sheetDate").textContent=y+"년 "+m+"월 "+d+"일";
-  const rec=data.entries[k]||{};
+  const morning=basis()==="morning";
+  selAKey=morning?prevKey(k):k; // 음주·식사가 저장되는 날짜
+  const rec=data.entries[k]||{}, arec=data.entries[selAKey]||{};
   const [d1,d2,d3]=weightToDigits(rec.w!=null?rec.w:null);
   wDigits[0].value=d1; wDigits[1].value=d2; wDigits[2].value=d3;
-  selRate=rec.f||null;
-  selDrink=normalizeDrink(rec.a);
+  selRate=(arec.f in FOOD_LV)?arec.f:null;
+  selDrink=normalizeDrink(arec.a);
   paintRate(); paintDrink();
-  document.getElementById("delBtn").style.display=data.entries[k]?"block":"none";
+  if(morning){
+    const [,am,ad]=selAKey.split("-").map(Number), dt='<span class="dgray">'+am+"/"+ad+"</span>";
+    document.getElementById("labFood").innerHTML="어제 식사 "+dt;
+    document.getElementById("labDrink").innerHTML="어제 음주 "+dt;
+  }else{
+    document.getElementById("labFood").textContent="어제의 식사량";
+    document.getElementById("labDrink").textContent="음주 여부";
+  }
+  document.getElementById("delBtn").style.display=(rec.w!=null||arec.f||normalizeDrink(arec.a)!==null)?"block":"none";
   document.getElementById("backdrop").classList.add("show");
   document.getElementById("sheet").classList.add("show");
   setTimeout(()=>{ wDigits[0].focus(); }, 300);
@@ -434,14 +492,12 @@ document.querySelectorAll("#drink button").forEach(b=>{
 document.getElementById("saveBtn").onclick=()=>{
   const w=digitsToWeight();
   if(w===null && !selRate && selDrink===null){ closeSheet(); return; }
-  data.entries[selKey]={};
-  if(w!==null) data.entries[selKey].w=Math.round(w*10)/10;
-  if(selRate) data.entries[selKey].f=selRate;
-  if(selDrink!==null) data.entries[selKey].a=selDrink;
+  patchEntry(selKey,{w:w!==null?Math.round(w*10)/10:null}); // 체중은 항상 입력한 날짜
+  patchEntry(selAKey,{f:selRate||null,a:selDrink}); // 음주·식사는 설정에 따라 그날 또는 전날
   save(); closeSheet(); renderCalendar(); renderChart();
 };
 document.getElementById("delBtn").onclick=()=>{
-  delete data.entries[selKey]; save(); closeSheet(); renderCalendar(); renderChart();
+  patchEntry(selKey,{w:null}); patchEntry(selAKey,{f:null,a:null}); save(); closeSheet(); renderCalendar(); renderChart();
 };
 document.getElementById("backdrop").onclick=closeSheet;
 document.getElementById("wInput").addEventListener("click",()=>{ wDigits[0].focus(); });
@@ -950,6 +1006,97 @@ document.getElementById("undoImpBtn").onclick=()=>{
   alert("가져오기 전 상태로 되돌렸어요.");
 };
 document.getElementById("menuBtn").addEventListener("click",paintUndo);
+
+/* ---------- 음주·식사 기록 기준 설정 ---------- */
+const basisDlg=document.getElementById("basisDlg");
+function paintBasisSub(){
+  document.getElementById("basisSub").textContent=localStorage.getItem(BASIS_KEY)===null?"아직 안 정함 (그날 밤으로 동작)":(basis()==="morning"?"다음 날 아침에 기록 (어제 것)":"그날 밤에 기록 (오늘 것)");
+}
+function openBasis(first){
+  menu.classList.remove("show");
+  basisDlg.querySelectorAll(".opt").forEach(b=>b.classList.toggle("sel",!first&&localStorage.getItem(BASIS_KEY)!==null&&b.dataset.b===basis()));
+  document.getElementById("basisClose").style.display=first?"none":"block";
+  basisDlg.classList.add("show");
+}
+basisDlg.querySelectorAll(".opt").forEach(b=>{
+  b.onclick=()=>{ localStorage.setItem(BASIS_KEY,b.dataset.b); basisDlg.classList.remove("show"); paintBasisSub(); };
+});
+document.getElementById("basisClose").onclick=()=>basisDlg.classList.remove("show");
+document.getElementById("basisBtn").onclick=()=>openBasis(false);
+
+/* ---------- 기존 음주·식사 기록 하루 앞으로 옮기기 (일회성) ---------- */
+const SHIFT_BACKUP_KEY="weightNote.v1.shiftBackup", SHIFT_DONE_KEY="weightNote.v1.shiftDone";
+const hasAF=r=>!!r&&(normalizeDrink(r.a)!==null||(r.f in FOOD_LV));
+// 모든 음주·식사 기록이 동시에 하루씩 앞으로 간다(체중은 그대로).
+// 옮길 자리에 '옮겨지지 않고 남는' 음주·식사 값이 있으면 덮어쓰지 않고 건너뛴다.
+function shiftPlan(){
+  const src=Object.keys(data.entries).filter(k=>hasAF(data.entries[k])).sort();
+  const moving=new Set(src), skipped=new Set();
+  let changed=true;
+  while(changed){ // 건너뛴 기록은 제자리에 남으므로 그 앞 칸도 막힐 수 있다
+    changed=false;
+    for(const k of src){
+      if(skipped.has(k)) continue;
+      const t=prevKey(k);
+      if(hasAF(data.entries[t])&&(!moving.has(t)||skipped.has(t))){ skipped.add(k); changed=true; }
+    }
+  }
+  const move=src.filter(k=>!skipped.has(k));
+  return {move,skip:skipped.size};
+}
+const dmd=k=>{ const [,m,d]=k.split("-").map(Number); return m+"/"+d; };
+function shiftDone(){ return localStorage.getItem(SHIFT_DONE_KEY)==="1"; }
+function paintShift(){
+  const b=document.getElementById("shiftBtn"), done=shiftDone();
+  b.disabled=done;
+  b.innerHTML=done?'기존 음주·식사 기록 하루 앞으로 옮기기<span class="msub">완료됨</span>':"기존 음주·식사 기록 하루 앞으로 옮기기";
+  document.getElementById("shiftUndoBtn").style.opacity=localStorage.getItem(SHIFT_BACKUP_KEY)?"1":".4";
+}
+function openShift(){
+  menu.classList.remove("show");
+  const p=shiftPlan(), ex=p.move.slice(-3).reverse();
+  document.getElementById("shHint").textContent="체중은 옮기지 않아요. 음주·식사 값만 하루 앞 날짜로 가요.";
+  document.getElementById("shPv").innerHTML=
+    '<div><span>'+p.move.length+'건의 음주·식사 기록을 하루 앞 날짜로 옮깁니다</span></div>'+
+    ex.map(k=>'<div><span>'+dmd(k)+' → '+dmd(prevKey(k))+'</span><span class="n" style="font-weight:500;color:var(--sub)">'+
+      [normalizeDrink(data.entries[k].a)!==null?"음주 "+["안 마심","마심","과음"][normalizeDrink(data.entries[k].a)]:"",
+       (data.entries[k].f in FOOD_LV)?"식사 "+data.entries[k].f:""].filter(Boolean).join(" · ")+'</span></div>').join("")+
+    (p.skip?'<span class="warn">옮길 자리에 이미 값이 있어 건너뛰는 기록 '+p.skip+'건</span>':"");
+  document.getElementById("shGo").disabled=p.move.length===0;
+  document.getElementById("shBd").classList.add("show");
+  document.getElementById("shSheet").classList.add("show");
+}
+function closeShift(){
+  document.getElementById("shBd").classList.remove("show");
+  document.getElementById("shSheet").classList.remove("show");
+}
+document.getElementById("shiftBtn").onclick=openShift;
+document.getElementById("shBd").onclick=closeShift;
+document.getElementById("shCancel").onclick=closeShift;
+document.getElementById("shGo").onclick=()=>{
+  const p=shiftPlan(); if(!p.move.length||shiftDone()) return;
+  // 현재 저장소 내용을 통째로 별도 키에 백업한 뒤에 옮긴다
+  localStorage.setItem(SHIFT_BACKUP_KEY,JSON.stringify({at:new Date().toISOString(),raw:localStorage.getItem(KEY)}));
+  const vals=p.move.map(k=>({k,a:data.entries[k].a,f:data.entries[k].f}));
+  vals.forEach(v=>patchEntry(v.k,{a:null,f:null}));
+  vals.forEach(v=>patchEntry(prevKey(v.k),{a:normalizeDrink(v.a),f:(v.f in FOOD_LV)?v.f:null}));
+  localStorage.setItem(SHIFT_DONE_KEY,"1");
+  save(); renderCalendar(); renderChart(); closeShift(); paintShift();
+  alert(p.move.length+"건을 하루 앞으로 옮겼어요. (건너뜀 "+p.skip+"건)\n마음에 안 들면 ⋯ 메뉴의 '옮기기 되돌리기'를 누르세요.");
+};
+document.getElementById("shiftUndoBtn").onclick=()=>{
+  menu.classList.remove("show");
+  let b=null; try{ b=JSON.parse(localStorage.getItem(SHIFT_BACKUP_KEY)); }catch(e){}
+  if(!b){ alert("되돌릴 옮기기 기록이 없어요."); return; }
+  if(!confirm("옮기기 직전 상태로 되돌릴까요?\n그 뒤에 입력한 기록도 함께 사라져요.")) return;
+  if(b.raw===null) localStorage.removeItem(KEY); else localStorage.setItem(KEY,b.raw);
+  localStorage.removeItem(SHIFT_BACKUP_KEY); localStorage.removeItem(SHIFT_DONE_KEY);
+  data=load(); renderCalendar(); renderChart(); paintShift();
+  alert("옮기기 전 상태로 되돌렸어요. 이제 다시 옮길 수 있어요.");
+};
+document.getElementById("menuBtn").addEventListener("click",()=>{ paintBasisSub(); paintShift(); });
+paintBasisSub(); paintShift();
+if(localStorage.getItem(BASIS_KEY)===null) openBasis(true); // 처음 한 번만 묻는다
 
 /* ---------- 서비스워커 등록 (오프라인 + 앱 설치) ---------- */
 if("serviceWorker" in navigator){
