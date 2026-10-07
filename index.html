@@ -260,7 +260,7 @@
   </div>
 
   <div class="card wcard">
-    <div class="card-title" style="margin-bottom:0;display:flex;justify-content:space-between;align-items:baseline">체중<span id="wTitleLast" class="title-val"></span></div>
+    <div class="card-title" style="margin-bottom:0;display:flex;justify-content:space-between;align-items:baseline">체중</div>
     <div class="chart-box" id="weightBox"></div>
   </div>
 
@@ -363,7 +363,7 @@
     <button id="basisBtn">음주·식사 기록 기준<span class="msub" id="basisSub"></span></button>
     <button id="shiftBtn">기존 음주·식사 기록 하루 앞으로 옮기기</button>
     <button id="shiftUndoBtn">옮기기 되돌리기</button>
-    <div class="ver">v1.0.1</div>
+    <div class="ver">v1.0.2</div>
   </div>
 </div>
 <input type="file" id="fileInput" accept="application/json" style="display:none">
@@ -710,7 +710,7 @@ function renderWeight(days){
   const pts=[];
   days.forEach((d,i)=>{ if(d.rec&&d.rec.w!=null) pts.push({i,w:d.rec.w,dt:d.dt}); });
   if(!pts.length){
-    ["wLast","wChange","wAvg"].forEach(id=>setText(id,"–")); setText("wTitleLast","");
+    ["wLast","wChange","wAvg"].forEach(id=>setText(id,"–"));
     box.innerHTML='<div class="empty-msg">이 기간에 체중 기록이 없어요.</div>';
     return;
   }
@@ -718,12 +718,11 @@ function renderWeight(days){
   const avg=pts.reduce((a,p)=>a+p.w,0)/pts.length;
   const diff=Math.round((last.w-first.w)*10)/10;
   setText("wLast",fmt1(last.w)+'<small> kg</small>');
-  setText("wTitleLast",fmt1(last.w)+'<small> kg</small>');
   setText("wChange",pts.length>1?((diff>0?"+":diff<0?"−":"")+fmt1(Math.abs(diff))+'<small> kg</small>'):"–");
   setText("wAvg",fmt1(avg)+'<small> kg</small>');
 
-  const W=340, H=125, padL=36, padR=10, iw=W-padL-padR;
-  const top=20, bottom=H-22, ih=bottom-top;
+  const W=340, H=140, padL=36, padR=10, iw=W-padL-padR;
+  const top=22, bottom=H-38, ih=bottom-top;
   const n=days.length;
   const x=i=> n===1?padL+iw/2:padL+iw*i/(n-1);
   const ws=pts.map(p=>p.w), mn=Math.min(...ws), mx=Math.max(...ws);
@@ -767,9 +766,18 @@ function renderWeight(days){
   }
   const line=d?'<path d="'+d+'" fill="none" stroke="#5B54E8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>':"";
 
+  // 최고점·최저점만 표시(같은 값이 여러 번이면 가장 최근 하나). 값이 모두 같거나 기록이 1개면 점 1개
+  let hiJ=0, loJ=0;
+  pts.forEach((p,j)=>{ if(p.w>=mx) hiJ=j; if(p.w<=mn) loJ=j; });
+  const marks=[[hiJ,-7]];
+  if(mx>mn&&loJ!==hiJ) marks.push([loJ,15]);
   let dots="";
-  const L=P[P.length-1];
-  dots+='<circle cx="'+L[0].toFixed(1)+'" cy="'+L[1].toFixed(1)+'" r="6" fill="#5B54E8" stroke="#fff" stroke-width="2"/>';
+  marks.forEach(([j,off])=>{
+    const px=P[j][0], py=P[j][1], txt=fmt1(pts[j].w), hw=txt.length*3.4;
+    const tx=Math.min(Math.max(px,padL+hw+2),W-2-hw);
+    dots+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="3" fill="#5B54E8"/>'+
+          '<text x="'+tx.toFixed(1)+'" y="'+(py+off).toFixed(1)+'" text-anchor="middle" font-size="11" fill="#8A8F9E" font-weight="500" stroke="#fff" stroke-width="3" paint-order="stroke" stroke-linejoin="round">'+txt+'</text>';
+  });
 
   const idxs=n<=2?[0,n-1]:[0,Math.floor((n-1)/2),n-1];
   let xlab="";
