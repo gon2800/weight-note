@@ -19,7 +19,7 @@
 <style>
   :root{
     --bg:#F5F6FB; --card:#FFFFFF; --ink:#1F2437; --sub:#7A809A;
-    --line:#EBEDF4; --accent:#5B54E8; --accent-soft:#EEEDFD;
+    --line:#EBEDF4; --accent:#5B54E8; --accent-ink:#3A33C4; --accent-soft:#EEEDFD;
     --drink:#EF6C6C;
     --food-hi:#E5484D; --food-mid:#EAB308; --food-lo:#3FB950;
     --shadow:0 1px 2px rgba(31,36,55,.04),0 4px 16px rgba(31,36,55,.05);
@@ -100,6 +100,25 @@
   .title-val{font-size:var(--fs-lg);font-weight:800;color:var(--accent);line-height:1.2}
   .title-val small{font-size:var(--fs-xs);font-weight:500;color:var(--sub)}
   .wcard{padding-top:var(--sp-1);padding-bottom:var(--sp-1)}
+  .ins-toggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;border:none;background:none;
+    border-top:1px solid var(--line);margin-top:var(--sp-1);padding:12px 0 4px;font-size:var(--fs-sm);font-weight:700;
+    color:var(--accent);cursor:pointer;font-family:inherit}
+  .ins-toggle .ico{width:16px;height:16px}
+  .ins-toggle .chev{transition:transform .15s}
+  .ins-toggle.open .chev{transform:rotate(180deg)}
+  .ins-body{padding-top:var(--sp-1)}
+  .ins-item{padding:var(--sp-1) 2px}
+  .ins-item+.ins-item{border-top:1px solid var(--line)}
+  .ins-tag{display:inline-block;font-size:var(--fs-xs);font-weight:700;color:var(--accent);background:var(--accent-soft);
+    border-radius:6px;padding:2px 8px;margin-bottom:6px}
+  .ins-text{font-size:var(--fs-md);font-weight:500;line-height:1.5;letter-spacing:-.2px;word-break:keep-all}
+  .ins-text b{font-weight:800;color:var(--accent-ink)}
+  .ins-ev{font-size:var(--fs-xs);color:var(--sub);margin-top:6px;line-height:1.4}
+  .ins-nav{display:flex;align-items:center;justify-content:space-between;margin-top:var(--sp-1)}
+  .ins-pager{display:flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-sm);font-weight:700;color:var(--sub)}
+  .ins-pager .navbtn{width:28px;height:28px}
+  .ins-all{border:none;background:none;color:var(--sub);font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit;padding:4px 0}
+  .ins-empty{text-align:center;color:var(--sub);font-size:var(--fs-sm);font-weight:500;padding:var(--sp-2) 0 var(--sp-1)}
   .empty-msg{text-align:center;color:var(--sub);font-size:var(--fs-sm);padding:32px 0;font-weight:500}
 
   .hm-wrap{display:flex;gap:var(--sp-2)}
@@ -201,6 +220,8 @@
       <div class="sum-tile"><span class="lab" id="wLabAvg">1개월 평균</span><span class="val tabnum" id="wAvg">–</span></div>
       <div class="sum-tile"><span class="lab" id="wLabChange">1개월 간</span><span class="val tabnum" id="wChange">–</span></div>
     </div>
+    <button class="ins-toggle" id="insToggle" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg><span id="insToggleTxt">분석·인사이트 보기</span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="ins-body" id="insBody" hidden></div>
   </div>
 
   <div class="card">
@@ -478,7 +499,151 @@ function renderChart(){
   }
   renderWeight(days);
   renderMix(days);
+  renderInsights();
 }
+
+/* ---------- 분석·인사이트 (모두 폰 안에서 계산) ---------- */
+// INSIGHTS-START
+const INS_DAYS=90, INS_GAP=3;
+const INS_OPEN_KEY="weightNote.insightOpen";
+function insSigned(t){ // t: 0.1kg 단위 정수가 아닌 평균(0.1kg 단위) → "+0.6" / "−0.2" / "0.0"
+  const r=Math.round(t)/10;
+  if(r===0) return "0.0";
+  return (r>0?"+":"−")+Math.abs(r).toFixed(1);
+}
+function insNum(n){ const r=Math.round(n*10)/10; return Number.isInteger(r)?String(r):r.toFixed(1); }
+function insB(t){ return "<b>"+t+"</b>"; }
+function insAvg(a){ return a.reduce((x,y)=>x+y,0)/a.length; }
+
+// 계산 재료: 체중 기록 목록, 날짜별 음주·식사 단계, 구간 목록
+function insPrep(entries,from){ // from: 키(YYYY-MM-DD) 또는 null(전체)
+  const ds=Object.keys(entries).sort();
+  const wts=[]; // {k,t} t=체중×10 (정수)
+  const day={}; // k -> {a,f}
+  for(const k of ds){
+    if(from&&k<from) continue;
+    const r=entries[k]; if(!r) continue;
+    day[k]={a:drinkLv(r),f:foodLv(r)};
+    if(typeof r.w==="number") wts.push({k,t:Math.round(r.w*10)});
+  }
+  return {wts,day};
+}
+function insParse(k){ const [y,m,d]=k.split("-").map(Number); return new Date(y,m-1,d); }
+function insDiff(k1,k2){ return Math.round((insParse(k2)-insParse(k1))/864e5); }
+// 연속한 두 체중 기록(간격 3일 이하) 사이 구간. 구간의 날짜는 앞 기록일 ~ 뒤 기록일 전날.
+function insIntervals(P){
+  const out=[];
+  for(let i=1;i<P.wts.length;i++){
+    const a=P.wts[i-1], b=P.wts[i], gap=insDiff(a.k,b.k);
+    if(gap>INS_GAP) continue;
+    const ds=[]; for(let g=0;g<gap;g++) ds.push(P.day[keyOfDate(dayAt(insParse(a.k),g))]||{a:null,f:null});
+    out.push({chg:b.t-a.t,ds});
+  }
+  return out;
+}
+const insDrank=v=>v>=1, insNoInput=v=>v===null;
+
+// 인사이트 규칙 목록 — 새 규칙은 여기에 { id, tag, run(P,ctx) } 를 추가하면 된다.
+// run: 조건이 안 맞으면 null, 맞으면 { text(HTML), ev(근거 줄) }.  ctx={scope,today}
+const INSIGHT_RULES=[
+  { id:"A", tag:"음주", run(P,c){
+    const iv=insIntervals(P), dr=[], no=[];
+    for(const v of iv){
+      const as=v.ds.map(d=>d.a).filter(a=>a!==null);
+      if(as.some(insDrank)) dr.push(v.chg); else if(as.length) no.push(v.chg);
+    }
+    if(dr.length<5||no.length<5) return null;
+    return {text:`술 마신 구간은 평균 ${insB(insSigned(insAvg(dr))+"kg")}, 안 마신 구간은 ${insB(insSigned(insAvg(no))+"kg")}`,
+            ev:`${c.scope} · 음주 구간 ${dr.length}번 / 무음주 구간 ${no.length}번`};
+  }},
+  { id:"B", tag:"회복", run(P,c){
+    const ks=Object.keys(P.day).filter(k=>P.day[k].a===2), left=[];
+    for(const k of ks){
+      let base=null;
+      for(const w of P.wts) if(w.k<=k&&insDiff(w.k,k)<=INS_GAP) base=w; // 그날 또는 직전 3일 내 마지막 체중
+      if(!base) continue;
+      const back=P.wts.find(w=>w.k>k&&w.t<=base.t);
+      if(!back) continue;
+      const n=insDiff(k,back.k);
+      if(n<=14) left.push(n);
+    }
+    if(left.length<3) return null;
+    return {text:`과음 후 원래 체중까지 평균 ${insB(insNum(insAvg(left))+"일")} 걸려요`,
+            ev:`${c.scope} · 회복 확인된 과음 ${left.length}번`};
+  }},
+  { id:"C", tag:"음주", run(P,c){
+    const wk={}; // 월요일 키 -> {ws:[체중×10], inp:음주 입력 일수, dr:음주 일수}
+    const mon=k=>{ const d=insParse(k); d.setDate(d.getDate()-((d.getDay()+6)%7)); return keyOfDate(d); };
+    const wo=k=>wk[mon(k)]||(wk[mon(k)]={ws:[],inp:0,dr:0});
+    for(const k in P.day){ const a=P.day[k].a; if(a!==null){ const o=wo(k); o.inp++; if(a>=1) o.dr++; } }
+    for(const w of P.wts) wo(w.k).ws.push(w.t);
+    const dry=[], wet=[];
+    for(const m in wk){
+      const o=wk[m]; if(o.ws.length<2||o.inp<4) continue;
+      const chg=o.ws[o.ws.length-1]-o.ws[0];
+      (o.dr===0?dry:wet).push(chg);
+    }
+    if(dry.length<3||wet.length<3) return null;
+    return {text:`술 안 마신 주는 평균 ${insB(insSigned(insAvg(dry))+"kg")}, 마신 주는 ${insB(insSigned(insAvg(wet))+"kg")}`,
+            ev:`${c.scope} · 무음주 주 ${dry.length}번 / 음주 주 ${wet.length}번`};
+  }},
+  { id:"D", tag:"식사", run(P,c){
+    const hi=insIntervals(P).filter(v=>v.ds.some(d=>d.f===2)).map(v=>v.chg);
+    if(hi.length<4) return null;
+    return {text:`과식한 구간은 평균 ${insB(insSigned(insAvg(hi))+"kg")}`,
+            ev:`${c.scope} · 과식 구간 ${hi.length}번`};
+  }},
+  { id:"E", tag:"이번 달", scopeFree:true, run(P,c){
+    const t=c.today, y=t.getFullYear(), m=t.getMonth(), n=t.getDate();
+    const pm=new Date(y,m-1,1), pn=Math.min(n,new Date(y,m,0).getDate());
+    let cur=0,curIn=0,prev=0,prevIn=0;
+    for(let d=1;d<=n;d++){ const a=drinkLv(c.entries[keyOf(y,m,d)]); if(a!==null){ curIn++; if(a>=1) cur++; } }
+    for(let d=1;d<=pn;d++){ const a=drinkLv(c.entries[keyOf(pm.getFullYear(),pm.getMonth(),d)]); if(a!==null){ prevIn++; if(a>=1) prev++; } }
+    if(curIn<3) return null;
+    const cmp=!prevIn?`이번 달 음주 ${insB(cur+"일")}이에요`
+      :cur===prev?`이번 달 음주 ${insB(cur+"일")}, 지난달과 같아요`
+      :`이번 달 음주 ${insB(cur+"일")}, 지난달 같은 기간보다 ${insB(Math.abs(cur-prev)+"일")} ${cur<prev?"적어요":"많아요"}`;
+    return {text:cmp, ev:`이번 달 ${n>1?"1~"+n:"1"}일 · 지난달 같은 기간 ${prevIn?prev+"일":"기록 없음"}`};
+  }},
+];
+
+// 규칙마다 최근 90일로 계산 → 조건 미달이면 전체 기록으로 다시 계산("전체 기록" 표시)
+function computeInsights(entries,today){
+  const from=keyOfDate(dayAt(today,-(INS_DAYS-1)));
+  const P90=insPrep(entries,from), Pall=insPrep(entries,null);
+  const out=[];
+  for(const r of INSIGHT_RULES){
+    let res=r.run(r.scopeFree?Pall:P90,{scope:"최근 90일",today,entries});
+    if(!res&&!r.scopeFree) res=r.run(Pall,{scope:"전체 기록",today,entries});
+    if(res) out.push({id:r.id,tag:r.tag,text:res.text,ev:res.ev});
+  }
+  return out;
+}
+// INSIGHTS-END
+
+let insOpen=localStorage.getItem(INS_OPEN_KEY)==="1", insIdx=0, insAll=false;
+function renderInsights(){
+  const tg=document.getElementById("insToggle"), body=document.getElementById("insBody");
+  tg.classList.toggle("open",insOpen); tg.setAttribute("aria-expanded",insOpen);
+  document.getElementById("insToggleTxt").textContent=insOpen?"분석·인사이트 접기":"분석·인사이트 보기";
+  body.hidden=!insOpen;
+  if(!insOpen) return;
+  const list=computeInsights(data.entries,todayDate());
+  if(!list.length){ body.innerHTML='<div class="ins-empty">기록이 더 쌓이면 분석을 보여드릴게요</div>'; return; }
+  if(insIdx>=list.length) insIdx=0;
+  const item=v=>`<div class="ins-item"><span class="ins-tag">${v.tag}</span><div class="ins-text">${v.text}</div><div class="ins-ev">${v.ev}</div></div>`;
+  const chev=(d)=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+  body.innerHTML=insAll
+    ? list.map(item).join("")+`<div class="ins-nav"><span></span><button class="ins-all" id="insAllBtn">한 개씩 보기</button></div>`
+    : item(list[insIdx])+`<div class="ins-nav"><div class="ins-pager"><button class="navbtn" id="insPrev" aria-label="이전">${chev("m15 18-6-6 6-6")}</button>${insIdx+1}/${list.length}<button class="navbtn" id="insNext" aria-label="다음">${chev("m9 18 6-6-6-6")}</button></div><button class="ins-all" id="insAllBtn">전체 보기</button></div>`;
+  const $=id=>document.getElementById(id);
+  if($("insPrev")){ $("insPrev").onclick=()=>{ insIdx=(insIdx-1+list.length)%list.length; renderInsights(); };
+                    $("insNext").onclick=()=>{ insIdx=(insIdx+1)%list.length; renderInsights(); }; }
+  $("insAllBtn").onclick=()=>{ insAll=!insAll; renderInsights(); };
+}
+document.getElementById("insToggle").onclick=()=>{
+  insOpen=!insOpen; localStorage.setItem(INS_OPEN_KEY,insOpen?"1":"0"); renderInsights();
+};
 
 /* ----- 체중 카드 ----- */
 const PERIOD_LABEL={7:"1주",31:"1개월",183:"6개월",0:"전체"};
